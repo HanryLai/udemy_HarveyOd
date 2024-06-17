@@ -12,7 +12,7 @@ import { AccountEntity } from 'src/entities/accounts';
 import { AccountRepository } from 'src/repositories/accounts';
 import { setExpireAt, validateUsername } from 'src/utils';
 
-import { LoginDto } from './dtos/login.dto';
+import { LoginDto } from './dtos';
 import { KeytokenService } from './keytoken/keytoken.service';
 import { KeyTokenEntity, LoginHistoryEntity, SessionEntity } from 'src/entities/auth';
 import { MailService } from './mail/mail.service';
@@ -26,45 +26,43 @@ export class AuthService {
       private readonly keyTokenService: KeytokenService,
       private readonly mailService: MailService,
       private readonly otpService: OtpService,
-   ) {}
+   ) {
+   }
 
    public async register(registerDto: RegisterDto): Promise<MessageResponse> {
-      // check username is valid
-      !validateUsername(registerDto.username);
+      !await validateUsername(registerDto.username);
       return await this.createAccount(registerDto);
    }
 
    public async verifyAccount(email: string): Promise<MessageResponse> {
       const account = await this.findAccountByEmail(email);
       if (!account) {
-         throw new CustomException('Account not found', HttpStatus.NOT_FOUND);
+         return {
+            success: false,
+            message: 'Account not found',
+            data: {},
+         };
       }
       if (account.isVerified) {
-         throw new CustomException('Account already verified', HttpStatus.BAD_REQUEST);
+         return {
+            success: false,
+            message: 'Account already verified',
+            data: {},
+         };
       }
-      return this.accountRepository.manager
-         .transaction(async (transactionalEntityManager) => {
-            account.isVerified = true;
-            await transactionalEntityManager.save(account);
-            return {
-               success: true,
-               message: 'Account verified',
-               data: {},
-            };
-         })
-         .catch((error) => {
-            throw new CustomException(
-               'Verify Account Fail',
-               HttpStatus.INTERNAL_SERVER_ERROR,
-               error,
-            );
-         });
+      account.isVerified = true;
+      const updateAccount = await this.accountRepository.save(account);
+      return {
+         success: true,
+         message: 'Account verified successfully',
+         data: updateAccount,
+      };
    }
 
    public async login(loginDto: LoginDto, req: Request, res: Response): Promise<MessageResponse> {
       try {
          // validate username
-         !validateUsername(loginDto.username);
+         !await validateUsername(loginDto.username);
 
          // check username is mail or not
          const checkUsernameResult = checkUsername(loginDto.username);
@@ -336,6 +334,7 @@ export class AuthService {
          );
       }
    }
+
    private async setRefreshTokenCookie(res: Response, refreshToken: string): Promise<void> {
       const expires = setExpireAt(1);
       res.cookie('Authentication', `Bearer ${refreshToken}`, {
