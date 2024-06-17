@@ -13,15 +13,16 @@ export class MailService {
    constructor(
       @InjectQueue(MAIL_QUEUE) private mailQueue: Queue,
       private readonly otpService: OtpService,
-   ) {}
+   ) {
+   }
 
    public async sendOTPEmail(name: string, email: string, otp: string): Promise<boolean> {
       await this.mailQueue.add(SEND_OTP_EMAIL_JOB, { name, email, otp });
       return true;
    }
 
-   public validateOtp(validOtp: ValidOtp): Promise<boolean> {
-      return this.otpService.validateOtp(validOtp.email, validOtp.otp);
+   public validateOtp(validOtp: ValidOtp): Promise<MessageResponse> {
+      return  this.otpService.validateOtp(validOtp.email, validOtp.otp);
    }
 
    public async sendNewOtp(sendMailDto: SendOtpDto): Promise<MessageResponse> {
