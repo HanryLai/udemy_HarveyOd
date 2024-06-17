@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  lms-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    environment:
+      - PORT=3030
+      - NODE_ENV=development
+    volumes:
+      - ./src:/usr/src/app/src
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3030/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: lms-course
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:

@@ -1,0 +1,18 @@
+FROM node:21
+
+WORKDIR /usr/src/app
+
+COPY . .
+
+RUN npm install -g pnpm
+
+RUN pnpm install
+
+RUN pnpm build
+
+RUN rm -rf ./src
+
+EXPOSE 3030
+
+CMD ["pnpm", "start:dev"]
+
