@@ -5,10 +5,12 @@ import { MessageResponse } from 'src/common';
 import { ValidOtp } from './dto/vaild-otp.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { MailService } from './mail.service';
+
 @ApiTags('Mail')
 @Controller('mail')
 export class MailController {
-   constructor(private readonly mailService: MailService) {}
+   constructor(private readonly mailService: MailService) {
+   }
 
    @HttpCode(HttpStatus.OK)
    @Post('valid-otp')
@@ -17,12 +19,12 @@ export class MailController {
    @ApiBody({ type: ValidOtp, description: 'OTP to validate' })
    public async validateAccount(@Body() validOtp: ValidOtp): Promise<MessageResponse> {
       const result = await this.mailService.validateOtp(validOtp);
-
       return {
-         success: true,
-         message: result ? 'Valid OTP' : 'Invalid OTP',
-         data: result,
+         success: result.success,
+         message: result ? 'OTP is valid' : 'OTP is invalid',
+         data: {},
       };
+
    }
 
    @HttpCode(HttpStatus.OK)
