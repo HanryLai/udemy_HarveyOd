@@ -23,7 +23,7 @@ describe('MailService', () => {
 
       service = module.get<MailService>(MailService);
       otpService = module.get<OtpService>(OtpService);
-      queue = module.get<Queue>('BullQueue_mail'); 
+      queue = module.get<Queue>('BullQueue_mail');
    });
 
    it('should be defined', () => {
@@ -40,12 +40,22 @@ describe('MailService', () => {
       });
    });
 
-   it('should validate OTP', async () => {
-      jest.spyOn(otpService, 'validateOtp').mockResolvedValueOnce(true);
-      const result = await service.validateOtp({ email: 'test@test.com', otp: '123456' });
-      expect(result).toBe(true);
-      expect(otpService.validateOtp).toBeCalledWith('test@test.com', '123456');
+   it('should validate OTP successfully', async () => {
+      const validOtp = { email: 'test@test.com', otp: '123456' };
+      const response = {
+         success: true,
+         message: 'OTP is valid',
+         data: {},
+      };
+
+      jest.spyOn(otpService, 'validateOtp').mockResolvedValue(response);
+
+      const result = await service.validateOtp(validOtp);
+
+      expect(result).toEqual(response);
+      expect(otpService.validateOtp).toHaveBeenCalledWith(validOtp.email, validOtp.otp);
    });
+
 
    it('should send new OTP', async () => {
       jest.spyOn(otpService, 'generateAndStoreOtp').mockResolvedValueOnce('123456');
