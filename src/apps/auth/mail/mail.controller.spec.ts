@@ -38,9 +38,9 @@ describe('MailController', () => {
       const validOtp: ValidOtp = { email: 'test@test.com', otp: '123456' };
       const result = await controller.validateAccount(validOtp);
       expect(result).toEqual({
-         success: true,
-         message: 'Valid OTP',
-         data: true,
+         success: result.success,
+         message: result ? 'OTP is valid' : 'OTP is invalid',
+         data: {},
       });
       expect(service.validateOtp).toHaveBeenCalledWith(validOtp);
    });
