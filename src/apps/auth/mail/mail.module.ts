@@ -5,9 +5,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { RedisService } from 'src/common/redis/redis.service';
 import { MailService } from './mail.service';
-import { MailQueueModule } from './queue/mail-queue.module';
+
 import { MailController } from './mail.controller';
 import { OtpService } from '../otp/otp.service';
+import { MailQueueModule } from './Queue/mail-queue.module';
 
 @Module({
    imports: [
