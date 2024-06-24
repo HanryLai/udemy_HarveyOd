@@ -1,31 +1,60 @@
 version: '3.8'
+
 services:
-  lms-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3030:3030"
-    environment:
-      - PORT=3030
-      - NODE_ENV=development
-    volumes:
-      - ./src:/usr/src/app/src
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3030/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+   harveyod-prod:
+      build:
+         context: .
+         target: production
+      environment:
+         - NODE_ENV=production
+         - DATABASE_URL=${DATABASE_URL}
+         - REDIS_URL=${REDIS_URL}
+      volumes:
+         - .:/usr/src/app
+      ports:
+         - '3030:3030'
+      command: ['node', 'dist/main']
+      depends_on:
+         - db
+         - redis
 
+   harveyod-dev:
+      build:
+         context: .
+         target: development
+      environment:
+         - NODE_ENV=development
+         - DATABASE_URL=${DATABASE_URL}
+         - REDIS_URL=${REDIS_URL}
+      volumes:
+         - .:/usr/src/app
+         - /usr/src/app/node_modules
+      ports:
+         - '3001:3000'
+      command: ['pnpm', 'start:dev']
+      depends_on:
+         - db
+         - redis
 
-  postgres:
-    image: postgres
-    container_name: postgres
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: lms-course
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+   db:
+      image: postgres:16
+      environment:
+         - POSTGRES_USER=${POSTGRES_USER}
+         - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+         - POSTGRES_DB=${POSTGRES_DB}
+      volumes:
+         - db_data:/var/lib/postgresql/data
+      ports:
+         - '5433:5433'
+
+   redis:
+      image: redis:7
+      ports:
+         - '6379:6379'
+
 volumes:
-  postgres_data:
+   db_data:
+
+networks:
+   default:
+      driver: bridge
