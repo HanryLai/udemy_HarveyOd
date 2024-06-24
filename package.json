@@ -24,12 +24,14 @@
       "typeorm": "ts-node ./node_modules/typeorm/cli"
    },
    "dependencies": {
+      "@elastic/elasticsearch": "^8.14.0",
       "@nestjs-modules/mailer": "^2.0.2",
       "@nestjs/cache-manager": "^2.2.2",
       "@nestjs/common": "^10.3.8",
       "@nestjs/config": "^3.2.2",
       "@nestjs/core": "^10.3.8",
       "@nestjs/cqrs": "^10.2.7",
+      "@nestjs/elasticsearch": "^10.0.1",
       "@nestjs/jwt": "^10.2.0",
       "@nestjs/passport": "^10.0.3",
       "@nestjs/platform-express": "^10.3.8",
