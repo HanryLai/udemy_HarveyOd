@@ -1,34 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+   Controller,
+   Get,
+   Post,
+   Body,
+   Patch,
+   Param,
+   Delete,
+   HttpCode,
+   HttpStatus,
+} from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { ApiBody, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
 @Controller('course')
 export class CourseController {
-  constructor(private readonly courseService: CourseService) {}
+   constructor(private readonly courseService: CourseService) {}
 
-  @Post()
-  create(@Body() createCourseDto: CreateCourseDto) {
-    return this.courseService.create(createCourseDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.courseService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.courseService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto) {
-    return this.courseService.update(+id, updateCourseDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.courseService.remove(+id);
-  }
+   @HttpCode(HttpStatus.OK)
+   @Post('register')
+   @ApiOperation({ summary: 'Create new course' })
+   @ApiOkResponse({ description: 'Create new course successfully' })
+   @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
+   public async createCourse(@Body() CreateCourseDto: CreateCourseDto) {}
 }
