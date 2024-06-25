@@ -11,6 +11,8 @@ RUN pnpm install
 
 COPY . .
 
+EXPOSE 3030
+
 RUN pnpm build
 
 
