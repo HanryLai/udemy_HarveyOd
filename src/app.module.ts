@@ -4,8 +4,6 @@ import * as Joi from 'joi';
 import { LoggerMiddleware } from './middlewares/Logger.middleware';
 import { PostgresDatabaseModule } from './common/databases/postgres/data.module';
 import { AuthModule } from './apps/auth/auth.module';
-import { CourseModule } from './scr/app/course/course.module';
-import { CourseModule } from './src/app/course/course.module';
 import { CourseModule } from './apps/course/course.module';
 
 @Module({
