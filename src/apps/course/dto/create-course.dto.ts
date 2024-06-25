@@ -33,7 +33,7 @@ export class CreateCourseDto {
    @ApiProperty()
    @IsString()
    @IsNotEmpty()
-   category: string;
+   categoryID: [string];
 
    @ApiProperty()
    @IsString()
