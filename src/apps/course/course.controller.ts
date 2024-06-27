@@ -4,6 +4,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ExistToken } from 'src/common/guards/exist-token.guard';
+import { MessageResponse } from 'src/common';
 
 @ApiTags('Courses')
 @Controller('courses')
@@ -20,8 +21,7 @@ export class CourseController {
       @Body() createCourseDto: CreateCourseDto,
       @Req() req: Request,
       @Res() res: Response,
-   ) {
-      const result = await this.courseService.create(createCourseDto, req, res);
-      return res.json(result);
+   ): Promise<MessageResponse> {
+      return await this.courseService.create(createCourseDto, req, res);
    }
 }
