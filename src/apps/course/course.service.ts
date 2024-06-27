@@ -7,11 +7,12 @@ import { AccountEntity } from 'src/entities/accounts';
 import { CustomException, MessageResponse } from 'src/common';
 import { CategoryEntity, CourseEntity } from 'src/entities/courses';
 import { error } from 'console';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class CourseService {
    constructor(
-      private courseRepo: CourseRepository,
+      @InjectRepository(CourseRepository) private courseRepo: CourseRepository,
       private entityManager: EntityManager,
    ) {}
 
@@ -91,7 +92,7 @@ export class CourseService {
 
          return foundAccount;
       } catch (error) {
-         throw error;
+         throw new CustomException(error);
       }
    }
 
@@ -112,7 +113,7 @@ export class CourseService {
          if (foundCourse) return true;
          return false;
       } catch (error) {
-         throw error;
+         throw new CustomException(error);
       }
    }
 }
