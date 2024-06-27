@@ -1,26 +1,27 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { CourseRepository } from 'src/repositories/courses';
+import { CategoryRepository, CourseRepository } from 'src/repositories/courses';
 import { EntityManager } from 'typeorm';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { AccountEntity } from 'src/entities/accounts';
 import { CustomException, MessageResponse } from 'src/common';
 import { CategoryEntity, CourseEntity } from 'src/entities/courses';
 import { error } from 'console';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AccountRepository } from 'src/repositories/accounts';
+import { KeyTokenRepository } from 'src/repositories/auth';
+import { KeyTokenEntity } from 'src/entities/auth';
 
 @Injectable()
 export class CourseService {
    constructor(
-      @InjectRepository(CourseRepository) private courseRepo: CourseRepository,
+      @InjectRepository(CourseEntity) private courseRepo: CourseRepository,
+      @InjectRepository(KeyTokenEntity) private keyTokenRepo: KeyTokenRepository,
+      @InjectRepository(CategoryEntity) private categoryRepo: CategoryRepository,
       private entityManager: EntityManager,
    ) {}
 
-   public async create(
-      createCourseDto: CreateCourseDto,
-      req: Request,
-      res: Response,
-   ): Promise<MessageResponse> {
+   public async create(createCourseDto: CreateCourseDto, req: Request): Promise<MessageResponse> {
       try {
          const refreshToken = req.headers.authorization.split(' ')[1];
          const foundAccount = await this.findAccountByToken(refreshToken);
@@ -37,8 +38,16 @@ export class CourseService {
                message: 'create course failed because this title for instructor existed',
                data: {},
             };
+         // get list category
+         const listCategories = await this.findCategories(createCourseDto.categoryID);
+         //save course
+         const result = await this.transactionSaveCourse(
+            createCourseDto,
+            foundAccount,
+            listCategories,
+         );
+         console.log('result' + result);
 
-         const result = await this.transactionSaveCourse(createCourseDto, foundAccount);
          if (result === null) throw new error('Error save course');
          return {
             success: true,
@@ -54,52 +63,72 @@ export class CourseService {
       }
    }
 
-   private async transactionSaveCourse(
-      createCourseDto: CreateCourseDto,
-      foundAccount: AccountEntity,
-   ) {
-      let result = null;
-      await this.entityManager.transaction(async (entityManager) => {
-         let foundCategories = [];
-         createCourseDto.categoryID.map(async (category) => {
-            const foundCategory = await this.entityManager
-               .createQueryBuilder(CategoryEntity, 'category')
-               .where('id = :categoryID', { categoryID: category })
-               .getOne();
-            if (!foundAccount) throw new CustomException('Category not exist', 404, {});
+   public async findCategories(listCategoryId: string[]): Promise<CategoryEntity[]> {
+      try {
+         let foundCategories: CategoryEntity[] = [];
+         listCategoryId.map(async (categoryId) => {
+            const foundCategory = await this.categoryRepo.findOne({
+               where: {
+                  id: categoryId,
+               },
+            });
+            if (!foundCategory)
+               // throw new CustomException('Category not exist', 404, {});
+               console.log('not found category');
             foundCategories.push(foundCategory);
          });
-         const course = new CourseEntity({
-            ...createCourseDto,
-            instructor: foundAccount,
-            categories: foundCategories,
-         });
-         result = await entityManager.save(course);
-      });
-      return result;
+
+         return foundCategories;
+      } catch (error) {
+         throw new CustomException(error);
+      }
    }
 
-   /**
-    * find account an check permission
-    */
-   private async findAccountByToken(refreshToken: string): Promise<AccountEntity | null> {
+   public async transactionSaveCourse(
+      createCourseDto: CreateCourseDto,
+      foundAccount: AccountEntity,
+      foundCategories: CategoryEntity[],
+   ) {
       try {
-         const foundAccount = await this.entityManager
-            .createQueryBuilder(AccountEntity, 'account')
-            .innerJoin('account.keyToken', 'keyToken')
-            .where('keyToken.refreshToken = :token', { token: refreshToken })
-            .getOne();
-
-         return foundAccount;
+         let result = null;
+         await this.entityManager.transaction(async (entityManager) => {
+            const course = new CourseEntity({
+               ...createCourseDto,
+               instructor: foundAccount,
+               categories: foundCategories,
+            });
+            console.log('course entity: ' + course);
+            result = await this.courseRepo.save(course);
+         });
+         return result;
       } catch (error) {
          throw new CustomException(error);
       }
    }
 
    /**
+    * find account an check permission // using temporary because don't know how to using verifyToken
+    */
+   private async findAccountByToken(refreshToken: string): Promise<AccountEntity | null> {
+      try {
+         const foundKeyToken = await this.keyTokenRepo.findOne({
+            where: {
+               refreshToken: refreshToken,
+            },
+            relations: ['account'],
+         });
+         console.log('foundKeyToken' + foundKeyToken.account.email);
+         const account = foundKeyToken.account;
+         return account;
+      } catch (error) {
+         throw new CustomException('You must login before create new course', 501, {});
+      }
+   }
+
+   /**
     * business login : Cannot duplicate title of course once a account
     */
-   private async isDuplicateTitleCourse(
+   public async isDuplicateTitleCourse(
       title_course: string,
       id_instructor: string,
    ): Promise<boolean> {

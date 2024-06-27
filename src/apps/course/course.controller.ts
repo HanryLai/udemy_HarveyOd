@@ -20,8 +20,7 @@ export class CourseController {
    public async createCourse(
       @Body() createCourseDto: CreateCourseDto,
       @Req() req: Request,
-      @Res() res: Response,
    ): Promise<MessageResponse> {
-      return await this.courseService.create(createCourseDto, req, res);
+      return await this.courseService.create(createCourseDto, req);
    }
 }

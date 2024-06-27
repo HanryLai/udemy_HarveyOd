@@ -31,7 +31,6 @@ export class CreateCourseDto {
    discount: number;
 
    @ApiProperty()
-   @IsString()
    @IsNotEmpty()
    categoryID: [string];
 

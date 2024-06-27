@@ -7,6 +7,5 @@ export interface ICourse extends IBaseEntity {
    price: number;
    level: string;
    discount: number;
-   category: string;
    thunbnailUrl: string;
 }

@@ -35,9 +35,6 @@ export class CourseEntity extends BaseEntity<CourseEntity> implements ICourse {
    @Column({ type: 'numeric', default: 0, name: 'discount' })
    discount: number;
 
-   @Column({ type: 'varchar', default: '', name: 'category' })
-   category: string;
-
    @Column({ type: 'varchar', default: '', name: 'thunbnailUrl' })
    thunbnailUrl: string;
 
