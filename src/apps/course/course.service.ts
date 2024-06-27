@@ -96,7 +96,7 @@ export class CourseService {
    }
 
    /**
-    * business login : Cannot duplicate title of course on a account
+    * business login : Cannot duplicate title of course once a account
     */
    private async isDuplicateTitleCourse(
       title_course: string,

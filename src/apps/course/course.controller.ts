@@ -6,7 +6,7 @@ import { Request, Response } from 'express';
 import { ExistToken } from 'src/common/guards/exist-token.guard';
 
 @ApiTags('Courses')
-@Controller('course')
+@Controller('courses')
 export class CourseController {
    constructor(private readonly courseService: CourseService) {}
 
