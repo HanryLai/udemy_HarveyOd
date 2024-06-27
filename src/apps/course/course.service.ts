@@ -8,7 +8,6 @@ import { CustomException, MessageResponse } from 'src/common';
 import { CategoryEntity, CourseEntity } from 'src/entities/courses';
 import { error } from 'console';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AccountRepository } from 'src/repositories/accounts';
 import { KeyTokenRepository } from 'src/repositories/auth';
 import { KeyTokenEntity } from 'src/entities/auth';
 
@@ -21,9 +20,9 @@ export class CourseService {
       private entityManager: EntityManager,
    ) {}
 
-   public async create(createCourseDto: CreateCourseDto, req: Request): Promise<MessageResponse> {
+   public async create(createCourseDto: CreateCourseDto, token: string): Promise<MessageResponse> {
       try {
-         const refreshToken = req.headers.authorization.split(' ')[1];
+         const refreshToken = token;
          const foundAccount = await this.findAccountByToken(refreshToken);
          //check account
          if (!foundAccount) return { success: false, message: 'cannot found account ', data: {} };
@@ -46,7 +45,6 @@ export class CourseService {
             foundAccount,
             listCategories,
          );
-         console.log('result' + result);
 
          if (result === null) throw new error('Error save course');
          return {
@@ -74,7 +72,7 @@ export class CourseService {
             });
             if (!foundCategory)
                // throw new CustomException('Category not exist', 404, {});
-               console.log('not found category');
+               console.log('not found category'); /// using temporary because not have any category
             foundCategories.push(foundCategory);
          });
 
@@ -97,7 +95,6 @@ export class CourseService {
                instructor: foundAccount,
                categories: foundCategories,
             });
-            console.log('course entity: ' + course);
             result = await this.courseRepo.save(course);
          });
          return result;
@@ -117,8 +114,8 @@ export class CourseService {
             },
             relations: ['account'],
          });
-         console.log('foundKeyToken' + foundKeyToken.account.email);
          const account = foundKeyToken.account;
+
          return account;
       } catch (error) {
          throw new CustomException('You must login before create new course', 501, {});
