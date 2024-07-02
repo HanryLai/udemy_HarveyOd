@@ -6,6 +6,7 @@ import { PostgresDatabaseModule } from './common/databases/postgres/data.module'
 import { AuthModule } from './apps/auth/auth.module';
 import { CourseModule } from './apps/course/course.module';
 import { CategoryModule } from './apps/category/category.module';
+import { TagModule } from './apps/tag/tag.module';
 
 @Module({
    imports: [
@@ -27,6 +28,7 @@ import { CategoryModule } from './apps/category/category.module';
       AuthModule,
       CourseModule,
       CategoryModule,
+      TagModule,
    ],
    controllers: [],
    providers: [],
