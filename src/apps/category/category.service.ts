@@ -6,17 +6,24 @@ import { CategoryRepository } from 'src/repositories/courses';
 import { EntityManager, JsonContains } from 'typeorm';
 import { CategoryEntity } from 'src/entities/courses';
 import { CustomException, MessageResponse } from 'src/common';
+import { CourseService } from '../course/course.service';
 
 @Injectable()
 export class CategoryService {
    constructor(
       @InjectRepository(CategoryEntity) private categoryRepo: CategoryRepository,
+      private courseService: CourseService,
       private entityManager: EntityManager,
    ) {}
 
    public async create(authToken: string, category: CreateCategoryDto): Promise<MessageResponse> {
       try {
-         console.log('cate:' + JSON.stringify(category));
+         const foundAccount = await this.courseService.findAccountByToken(authToken);
+         if (!foundAccount)
+            return {
+               success: false,
+               message: "Don't have permisstion or don't login before",
+            };
          const foundCategory = await this.categoryRepo.findOne({
             where: {
                name: category.name,
@@ -39,4 +46,6 @@ export class CategoryService {
          throw new CustomException('Create new category failed', 500, error);
       }
    }
+
+   public async findById(idCategory: string) {}
 }
