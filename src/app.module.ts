@@ -5,6 +5,7 @@ import { LoggerMiddleware } from './middlewares/Logger.middleware';
 import { PostgresDatabaseModule } from './common/databases/postgres/data.module';
 import { AuthModule } from './apps/auth/auth.module';
 import { CourseModule } from './apps/course/course.module';
+import { CategoryModule } from './apps/category/category.module';
 
 @Module({
    imports: [
@@ -25,6 +26,7 @@ import { CourseModule } from './apps/course/course.module';
       PostgresDatabaseModule,
       AuthModule,
       CourseModule,
+      CategoryModule,
    ],
    controllers: [],
    providers: [],
