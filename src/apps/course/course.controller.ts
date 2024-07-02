@@ -28,7 +28,7 @@ export class CourseController {
    @Get('/course/:course_id')
    @ApiOperation({ summary: 'Get course by id' })
    @ApiFoundResponse({ description: 'Found this course' })
-   @ApiBody({ type: [CourseEntity] })
+   @ApiBody({ type: [CourseEntity] }) // type not clear
    public async getCourseById(@Param('course_id') id: string): Promise<MessageResponse> {
       return await this.courseService.findCourseById(id);
    }

@@ -25,7 +25,6 @@ export class CourseService {
          const foundCourse = await this.courseRepo.findOne({
             where: { id },
          });
-         console.log('found :' + foundCourse);
          if (!foundCourse)
             return {
                success: false,
