@@ -134,7 +134,7 @@ export class CourseService {
    /**
     * find account an check permission // using temporary because don't know how to using verifyToken
     */
-   private async findAccountByToken(refreshToken: string): Promise<AccountEntity | null> {
+   public async findAccountByToken(refreshToken: string): Promise<AccountEntity | null> {
       try {
          const foundKeyToken = await this.keyTokenRepo.findOne({
             where: {
@@ -142,8 +142,8 @@ export class CourseService {
             },
             relations: ['account'],
          });
+         if (!foundKeyToken) return null;
          const account = foundKeyToken.account;
-
          return account;
       } catch (error) {
          throw new CustomException('You must login before create new course', 501, {});
