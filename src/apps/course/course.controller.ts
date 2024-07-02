@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ExistToken } from 'src/common/guards/exist-token.guard';
 import { MessageResponse } from 'src/common';
 import { TokenCurrent } from 'src/common/decorators/token.decorator';
@@ -27,7 +27,7 @@ export class CourseController {
    @HttpCode(HttpStatus.FOUND)
    @Get('/course/:course_id')
    @ApiOperation({ summary: 'Get course by id' })
-   @ApiOkResponse({ description: 'Found this course' })
+   @ApiFoundResponse({ description: 'Found this course' })
    @ApiBody({ type: [CourseEntity] })
    public async getCourseById(@Param('course_id') id: string): Promise<MessageResponse> {
       return await this.courseService.findCourseById(id);
