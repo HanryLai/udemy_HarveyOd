@@ -20,6 +20,35 @@ export class CourseService {
       private entityManager: EntityManager,
    ) {}
 
+   public async findCourseById(id: string): Promise<MessageResponse> {
+      try {
+         const foundCourse = await this.courseRepo.findOne({
+            where: { id },
+         });
+         console.log('found :' + foundCourse);
+         if (!foundCourse)
+            return {
+               success: false,
+               message: 'this course not exist ',
+               data: {},
+            };
+         return {
+            success: true,
+            message: 'create course successfully',
+            data: {
+               course: foundCourse,
+               category: foundCourse.categories,
+            },
+         };
+      } catch (error) {
+         throw new CustomException(
+            'create new course failed',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            error,
+         );
+      }
+   }
+
    public async create(createCourseDto: CreateCourseDto, token: string): Promise<MessageResponse> {
       try {
          const refreshToken = token;
