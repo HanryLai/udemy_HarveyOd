@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { CategoryRepository, CourseRepository } from 'src/repositories/courses';
+import { CourseRepository } from 'src/repositories/courses';
 import { EntityManager } from 'typeorm';
 import { AccountEntity } from 'src/entities/accounts';
 import { CustomException, MessageResponse } from 'src/common';
-import { CategoryEntity, CourseEntity } from 'src/entities/courses';
+import { CourseEntity } from 'src/entities/courses';
 import { error } from 'console';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeyTokenRepository } from 'src/repositories/auth';
@@ -161,4 +161,8 @@ export class CourseService {
          throw new CustomException(error);
       }
    }
+
+   /**
+    * save course to redis
+    */
 }
