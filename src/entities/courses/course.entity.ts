@@ -1,4 +1,12 @@
-import { Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import {
+   Column,
+   Entity,
+   Index,
+   JoinTable,
+   ManyToMany,
+   ManyToOne,
+   OneToMany,
+} from 'typeorm';
 import { BaseEntity } from '../bases';
 import { ICourse } from '../interfaces';
 
@@ -18,7 +26,7 @@ import { CourseType } from 'src/constants/enums/course-type.enum.constant';
 @Entity({ name: 'course' })
 export class CourseEntity extends BaseEntity<CourseEntity> implements ICourse {
    @Index('IDX_COURSE_TITLE')
-   @Column({ type: 'varchar', default: '', name: 'title' })
+   @Column({ type: 'varchar', name: 'title' })
    title: string;
 
    @Column({ type: 'varchar', default: '', name: 'description' })
