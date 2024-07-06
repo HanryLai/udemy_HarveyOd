@@ -6,7 +6,6 @@ import {
    HttpStatus,
    UseGuards,
    UseInterceptors,
-   Headers,
    Get,
    Param,
    Query,
@@ -15,11 +14,7 @@ import {
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ExistToken } from 'src/common/guards/exist-token.guard';
-import { MessageResponse } from 'src/common';
-import { TokenCurrent } from 'src/common/decorators/token.decorator';
-import { RequestInterceptor } from 'src/common/interceptors/token-current.interceptor';
-import { CourseEntity } from 'src/entities/courses';
+import { TokenCurrent, RequestInterceptor, ExistToken, MessageResponse } from 'src/common';
 
 @ApiTags('Courses')
 @Controller('courses')
