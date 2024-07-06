@@ -5,11 +5,13 @@ import { CategoryRepository } from 'src/repositories/courses';
 import { CategoryEntity } from 'src/entities/courses';
 import { CustomException, MessageResponse } from 'src/common';
 import { CourseService } from '../course/course.service';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoryService {
    constructor(
-      @InjectRepository(CategoryEntity) private categoryRepo: CategoryRepository,
+      @InjectRepository(CategoryEntity)
+      private categoryRepo: CategoryRepository,
       private courseService: CourseService,
    ) {}
 
@@ -40,7 +42,7 @@ export class CategoryService {
    public async findAll(): Promise<MessageResponse> {
       try {
          const listCategory = await this.categoryRepo.find();
-         const message = listCategory
+         const message = listCategory.length
             ? 'Found list category successfully'
             : 'Cannot have any category';
          return {
@@ -57,9 +59,13 @@ export class CategoryService {
       }
    }
 
-   public async create(authToken: string, category: CreateCategoryDto): Promise<MessageResponse> {
+   public async create(
+      authToken: string,
+      category: CreateCategoryDto,
+   ): Promise<MessageResponse> {
       try {
-         const foundAccount = await this.courseService.findAccountByToken(authToken);
+         const foundAccount =
+            await this.courseService.findAccountByToken(authToken);
          if (!foundAccount)
             return {
                success: false,
@@ -86,6 +92,40 @@ export class CategoryService {
       } catch (error) {
          throw new CustomException(
             'create new category failed',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            error,
+         );
+      }
+   }
+
+   public async updateCategory(
+      id: string,
+      category: UpdateCategoryDto,
+   ): Promise<MessageResponse> {
+      try {
+         const foundCategory = await this.categoryRepo.findOne({
+            where: { id },
+         });
+         if (!foundCategory)
+            return {
+               success: false,
+               message: 'this category not existed',
+               data: {},
+            };
+         const updateCategory = {
+            ...foundCategory,
+            ...category,
+         };
+         const result = await this.categoryRepo.save(updateCategory);
+         console.log(result);
+         return {
+            success: true,
+            message: 'update category successfully',
+            data: { result },
+         };
+      } catch (error) {
+         throw new CustomException(
+            ' update category failed',
             HttpStatus.INTERNAL_SERVER_ERROR,
             error,
          );
