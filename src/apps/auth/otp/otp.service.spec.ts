@@ -35,7 +35,11 @@ describe('OtpService', () => {
 
       const result = await service.validateOtp(email, otp);
 
-      expect(result).toBe(true);
+      expect(result).toStrictEqual({
+         success: true,
+         message: 'OTP is valid',
+         data: {},
+      });
       expect(redisService.get).toHaveBeenCalledWith(email);
    });
 
@@ -48,7 +52,11 @@ describe('OtpService', () => {
 
       const result = await service.validateOtp(email, wrongOtp);
 
-      expect(result).toBe(false);
+      expect(result).toStrictEqual({
+         success: false,
+         message: 'OTP is invalid',
+         data: {},
+      });
       expect(redisService.get).toHaveBeenCalledWith(email);
    });
 
