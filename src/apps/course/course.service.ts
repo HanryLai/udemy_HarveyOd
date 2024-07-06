@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CategoryRepository, CourseRepository } from 'src/repositories/courses';
 import { EntityManager } from 'typeorm';
-import { Request } from 'express';
 import { AccountEntity } from 'src/entities/accounts';
 import { CustomException, MessageResponse } from 'src/common';
 import { CategoryEntity, CourseEntity } from 'src/entities/courses';
@@ -53,7 +52,12 @@ export class CourseService {
          const refreshToken = token;
          const foundAccount = await this.findAccountByToken(refreshToken);
          //check account
-         if (!foundAccount) return { success: false, message: 'cannot found account ', data: {} };
+         if (!foundAccount)
+            return {
+               success: false,
+               message: 'cannot found account ',
+               data: {},
+            };
          // check duplicate title inside found user
          const isDuplicate = await this.isDuplicateTitleCourse(
             createCourseDto.title,
@@ -65,14 +69,15 @@ export class CourseService {
                message: 'create course failed because this title for instructor existed',
                data: {},
             };
-         // get list category
-         const listCategories = await this.findCategories(createCourseDto.categoryID);
          //save course
-         const result = await this.transactionSaveCourse(
-            createCourseDto,
-            foundAccount,
-            listCategories,
-         );
+         const result = await this.entityManager.transaction(async (entityManager) => {
+            const newCourse = new CourseEntity({
+               ...createCourseDto,
+               instructor: foundAccount,
+            });
+            entityManager.save(newCourse);
+            return newCourse;
+         });
 
          if (result === null) throw new error('Error save course');
          return {
@@ -86,48 +91,6 @@ export class CourseService {
             HttpStatus.INTERNAL_SERVER_ERROR,
             error,
          );
-      }
-   }
-
-   public async findCategories(listCategoryId: string[]): Promise<CategoryEntity[]> {
-      try {
-         let foundCategories: CategoryEntity[] = [];
-         listCategoryId.map(async (categoryId) => {
-            const foundCategory = await this.categoryRepo.findOne({
-               where: {
-                  id: categoryId,
-               },
-            });
-            if (!foundCategory)
-               // throw new CustomException('Category not exist', 404, {});
-               console.log('not found category'); /// using temporary because not have any category
-            foundCategories.push(foundCategory);
-         });
-
-         return foundCategories;
-      } catch (error) {
-         throw new CustomException(error);
-      }
-   }
-
-   public async transactionSaveCourse(
-      createCourseDto: CreateCourseDto,
-      foundAccount: AccountEntity,
-      foundCategories: CategoryEntity[],
-   ) {
-      try {
-         let result = null;
-         await this.entityManager.transaction(async (entityManager) => {
-            const course = new CourseEntity({
-               ...createCourseDto,
-               instructor: foundAccount,
-               categories: foundCategories,
-            });
-            result = await this.courseRepo.save(course);
-         });
-         return result;
-      } catch (error) {
-         throw new CustomException(error);
       }
    }
 
@@ -162,7 +125,9 @@ export class CourseService {
             .createQueryBuilder(AccountEntity, 'account')
             .innerJoin('account.courses', 'course')
             .where('course.title = :title', { title: title_course })
-            .andWhere('course.instructorId = :id_instructor', { id_instructor: id_instructor })
+            .andWhere('course.instructorId = :id_instructor', {
+               id_instructor: id_instructor,
+            })
             .getOne();
          if (foundCourse) return true;
          return false;

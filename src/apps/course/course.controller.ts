@@ -12,7 +12,13 @@ import {
 } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+   ApiBody,
+   ApiFoundResponse,
+   ApiOkResponse,
+   ApiOperation,
+   ApiTags,
+} from '@nestjs/swagger';
 import { ExistToken } from 'src/common/guards/exist-token.guard';
 import { MessageResponse } from 'src/common';
 import { TokenCurrent } from 'src/common/decorators/token.decorator';
@@ -29,7 +35,9 @@ export class CourseController {
    @ApiOperation({ summary: 'Get course by id' })
    @ApiFoundResponse({ description: 'Found this course' })
    @ApiBody({ type: [CourseEntity] }) // type not clear
-   public async getCourseById(@Param('course_id') id: string): Promise<MessageResponse> {
+   public async getCourseById(
+      @Param('course_id') id: string,
+   ): Promise<MessageResponse> {
       return await this.courseService.findCourseById(id);
    }
 
@@ -39,7 +47,10 @@ export class CourseController {
    @Post('create')
    @ApiOperation({ summary: 'Create new course' })
    @ApiOkResponse({ description: 'Create new course successfully' })
-   @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
+   @ApiBody({
+      type: CreateCourseDto,
+      description: 'About information of course',
+   })
    public async createCourse(
       @Body() createCourseDto: CreateCourseDto,
       @TokenCurrent() token: string,

@@ -8,7 +8,6 @@ import {
    IsOptional,
    IsString,
 } from 'class-validator';
-import { Level } from '../enum/level.enum';
 
 export class UpdateCourseDto extends PartialType(CreateCourseDto) {
    @ApiProperty()
