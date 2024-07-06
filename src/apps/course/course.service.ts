@@ -8,6 +8,8 @@ import { CourseEntity } from 'src/entities/courses';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeyTokenRepository } from 'src/repositories/auth';
 import { KeyTokenEntity } from 'src/entities/auth';
+import { RedisService } from 'src/common/redis/redis.service';
+import { stringify } from 'querystring';
 
 @Injectable()
 export class CourseService {
@@ -15,6 +17,7 @@ export class CourseService {
       @InjectRepository(CourseEntity) private courseRepo: CourseRepository,
       @InjectRepository(KeyTokenEntity) private keyTokenRepo: KeyTokenRepository,
       private entityManager: EntityManager,
+      private redisService: RedisService,
    ) {}
 
    public async findCourseById(id: string): Promise<MessageResponse> {
@@ -28,6 +31,7 @@ export class CourseService {
                message: 'this course not exist ',
                data: {},
             };
+         await this.saveCourseToRedis(foundCourse);
          return {
             success: true,
             message: 'create course successfully',
@@ -164,4 +168,7 @@ export class CourseService {
    /**
     * save course to redis
     */
+   public async saveCourseToRedis(course: CourseEntity): Promise<void> {
+      await this.redisService.set('course:' + course.id, JSON.stringify(course), 60 * 30);
+   }
 }
