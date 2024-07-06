@@ -11,6 +11,9 @@ export class SessionEntity extends BaseEntity<SessionEntity> implements ISession
    @Column({ type: 'varchar', default: '' })
    accessToken: string;
 
+   @Column({ type: 'varchar', default: '' })
+   publicKey: string;
+
    @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
    expiresAt: Date;
 
