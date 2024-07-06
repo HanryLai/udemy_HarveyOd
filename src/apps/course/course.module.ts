@@ -9,5 +9,6 @@ import { KeyTokenEntity } from 'src/entities/auth';
    imports: [TypeOrmModule.forFeature([CourseEntity, KeyTokenEntity, CategoryEntity])],
    controllers: [CourseController],
    providers: [CourseService],
+   exports: [CourseService],
 })
 export class CourseModule {}

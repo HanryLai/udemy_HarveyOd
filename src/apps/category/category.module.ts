@@ -4,7 +4,6 @@ import { CategoryController } from './category.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryEntity, CourseEntity } from 'src/entities/courses';
 import { CourseService } from '../course/course.service';
-import { CourseModule } from '../course/course.module';
 import { KeyTokenEntity } from 'src/entities/auth';
 
 @Module({

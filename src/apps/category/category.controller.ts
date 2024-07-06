@@ -28,12 +28,21 @@ export class CategoryController {
    constructor(private readonly categoryService: CategoryService) {}
 
    @HttpCode(HttpStatus.FOUND)
-   @Get(':id')
+   @Get('category/:id')
    @ApiOperation({ summary: 'Find category by id category' })
    @ApiFoundResponse({ description: 'Find category by id category successfully' })
    @ApiBody({ type: CreateCategoryDto, description: 'About scheme category' })
    public async findById(@Param('id') id: string): Promise<MessageResponse> {
       return await this.categoryService.findById(id);
+   }
+
+   @HttpCode(HttpStatus.FOUND)
+   @Get('')
+   @ApiOperation({ summary: 'Find category by id category' })
+   @ApiFoundResponse({ description: 'Find category by id category successfully' })
+   @ApiBody({ type: CreateCategoryDto, description: 'About scheme category' })
+   public async findAll(): Promise<MessageResponse> {
+      return await this.categoryService.findAll();
    }
 
    @HttpCode(HttpStatus.OK)
