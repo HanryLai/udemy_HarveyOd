@@ -22,6 +22,18 @@ export class CourseService {
 
    public async findCourseById(id: string): Promise<MessageResponse> {
       try {
+         //check on redis
+         const foundRedis = await this.getCourseOnRedis(id);
+         if (foundRedis)
+            return {
+               success: true,
+               message: 'create course successfully',
+               data: {
+                  course: foundRedis,
+                  category: foundRedis.categories,
+               },
+            };
+         //find on database
          const foundCourse = await this.courseRepo.findOne({
             where: { id },
          });
@@ -169,6 +181,10 @@ export class CourseService {
     * save course to redis
     */
    public async saveCourseToRedis(course: CourseEntity): Promise<void> {
-      await this.redisService.set('course:' + course.id, JSON.stringify(course), 60 * 30);
+      await this.redisService.set('course:' + course.id, course, 60 * 30);
+   }
+
+   public async getCourseOnRedis(id: string): Promise<CourseEntity> {
+      return await this.redisService.get<CourseEntity>('course:' + id);
    }
 }
