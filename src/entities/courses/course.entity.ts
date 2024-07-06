@@ -13,6 +13,7 @@ import { ReviewEntity } from './review.entity';
 import { AssignmentEntity } from './assignment.entity';
 import { QuizQuestionEntity } from './question.entity';
 import { InteractionEntity } from './interaction.entity';
+import { CourseType } from 'src/constants/enums/course-type.enum.constant';
 
 @Entity({ name: 'course' })
 export class CourseEntity extends BaseEntity<CourseEntity> implements ICourse {
@@ -37,6 +38,13 @@ export class CourseEntity extends BaseEntity<CourseEntity> implements ICourse {
 
    @Column({ type: 'varchar', default: '', name: 'thunbnailUrl' })
    thunbnailUrl: string;
+
+   @Column({
+      type: 'enum',
+      enum: CourseType,
+      default: CourseType.DRAFT,
+   })
+   type: CourseType;
 
    @OneToMany(() => EnrollmentEntity, (enrollment) => enrollment.course)
    enrollments: EnrollmentEntity[];
