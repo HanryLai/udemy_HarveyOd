@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+   IsArray,
+   IsEnum,
+   IsNotEmpty,
+   IsNumber,
+   IsOptional,
+   IsString,
+} from 'class-validator';
 import { Level } from '../enum/level.enum';
 
 export class CreateCourseDto {
@@ -9,33 +16,31 @@ export class CreateCourseDto {
    title: string;
 
    @ApiProperty()
+   @IsOptional()
    @IsString()
-   @IsNotEmpty()
    description: string;
 
    @ApiProperty()
+   @IsOptional()
    @IsArray()
-   @IsNotEmpty()
    language: string[];
 
    @ApiProperty()
+   @IsOptional()
    @IsNumber({}, { message: 'Price must be a numeric string' })
    price: number;
 
    @ApiProperty()
-   @IsEnum(Level)
-   @IsNotEmpty()
-   level: Level;
+   @IsOptional()
+   @IsString()
+   level: string;
 
    @ApiProperty()
+   @IsOptional()
    discount: number;
 
    @ApiProperty()
-   @IsNotEmpty()
-   categoryID: [string];
-
-   @ApiProperty()
+   @IsOptional()
    @IsString()
-   @IsNotEmpty()
    thunbnailUrl: string;
 }
