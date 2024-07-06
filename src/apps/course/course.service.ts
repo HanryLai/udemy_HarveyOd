@@ -5,7 +5,6 @@ import { EntityManager } from 'typeorm';
 import { AccountEntity } from 'src/entities/accounts';
 import { CustomException, MessageResponse } from 'src/common';
 import { CourseEntity } from 'src/entities/courses';
-import { error } from 'console';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeyTokenRepository } from 'src/repositories/auth';
 import { KeyTokenEntity } from 'src/entities/auth';
@@ -105,7 +104,7 @@ export class CourseService {
             return newCourse;
          });
 
-         if (result === null) throw new error('Error save course');
+         if (result === null) throw new Error('Error save course');
          return {
             success: true,
             message: 'create course successfully',
