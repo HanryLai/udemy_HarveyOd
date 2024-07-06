@@ -1,12 +1,4 @@
-import {
-   Column,
-   Entity,
-   Index,
-   JoinTable,
-   ManyToMany,
-   ManyToOne,
-   OneToMany,
-} from 'typeorm';
+import { Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from '../bases';
 import { ICourse } from '../interfaces';
 
@@ -32,7 +24,7 @@ export class CourseEntity extends BaseEntity<CourseEntity> implements ICourse {
    @Column({ type: 'varchar', default: '', name: 'description' })
    description: string;
 
-   @Column({ array: true, type: 'text', name: 'language' })
+   @Column({ array: true, type: 'text', name: 'language', default: ['English'] })
    language: string[];
 
    @Column({ type: 'numeric', default: 0, name: 'price' })
