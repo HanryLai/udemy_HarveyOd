@@ -217,6 +217,7 @@ export class AuthService {
          const createSession = new SessionEntity({
             ...commonProps,
             accessToken: generateKey.accessToken,
+            publicKey: generateKey.publicKey,
          });
 
          // update last login
