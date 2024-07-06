@@ -15,7 +15,6 @@ export class CourseService {
    constructor(
       @InjectRepository(CourseEntity) private courseRepo: CourseRepository,
       @InjectRepository(KeyTokenEntity) private keyTokenRepo: KeyTokenRepository,
-      @InjectRepository(CategoryEntity) private categoryRepo: CategoryRepository,
       private entityManager: EntityManager,
    ) {}
 
@@ -41,6 +40,33 @@ export class CourseService {
       } catch (error) {
          throw new CustomException(
             'create new course failed',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            error,
+         );
+      }
+   }
+
+   public async findByOffSet(offset: number): Promise<MessageResponse> {
+      try {
+         const limit = 10;
+         const listCourse = await this.courseRepo.find({
+            skip: limit * (offset - 1),
+            take: limit,
+         });
+         if (!listCourse)
+            return {
+               success: false,
+               message: 'Cannot found',
+               data: {},
+            };
+         return {
+            success: true,
+            message: 'Found list course in offset ' + offset,
+            data: { ...listCourse, offset: offset, limit: limit },
+         };
+      } catch (error) {
+         throw new CustomException(
+            'Find course with offset failed',
             HttpStatus.INTERNAL_SERVER_ERROR,
             error,
          );

@@ -9,16 +9,12 @@ import {
    Headers,
    Get,
    Param,
+   Query,
+   ParseIntPipe,
 } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
-import {
-   ApiBody,
-   ApiFoundResponse,
-   ApiOkResponse,
-   ApiOperation,
-   ApiTags,
-} from '@nestjs/swagger';
+import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ExistToken } from 'src/common/guards/exist-token.guard';
 import { MessageResponse } from 'src/common';
 import { TokenCurrent } from 'src/common/decorators/token.decorator';
@@ -34,11 +30,20 @@ export class CourseController {
    @Get('/course/:course_id')
    @ApiOperation({ summary: 'Get course by id' })
    @ApiFoundResponse({ description: 'Found this course' })
-   @ApiBody({ type: [CourseEntity] }) // type not clear
-   public async getCourseById(
-      @Param('course_id') id: string,
-   ): Promise<MessageResponse> {
+   @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
+   public async getCourseById(@Param('course_id') id: string): Promise<MessageResponse> {
       return await this.courseService.findCourseById(id);
+   }
+
+   @HttpCode(HttpStatus.FOUND)
+   @Get('')
+   @ApiOperation({ summary: 'Get course by id' })
+   @ApiFoundResponse({ description: 'Found this course' })
+   @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
+   public async getCourseByOffSet(
+      @Query('offset', ParseIntPipe) offset: number,
+   ): Promise<MessageResponse> {
+      return await this.courseService.findByOffSet(offset);
    }
 
    @UseInterceptors(RequestInterceptor)
