@@ -1,13 +1,14 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreateCategoryDto } from './dto/create-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager } from 'typeorm';
+
 import { CategoryRepository } from 'src/repositories/courses';
 import { CategoryEntity, CourseEntity } from 'src/entities/courses';
 import { CustomException, MessageResponse } from 'src/common';
+
 import { CourseService } from '../course/course.service';
-import { UpdateCategoryDto } from './dto/update-category.dto';
-import { CategoryCourseDto } from './dto/create-category-course.dto';
-import { EntityManager, UpdateResult } from 'typeorm';
+
+import { CategoryCourseDto, UpdateCategoryDto, CreateCategoryDto } from './dto';
 
 @Injectable()
 export class CategoryService {
