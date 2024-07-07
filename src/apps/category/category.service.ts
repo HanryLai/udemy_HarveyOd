@@ -2,17 +2,20 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CategoryRepository } from 'src/repositories/courses';
-import { CategoryEntity } from 'src/entities/courses';
+import { CategoryEntity, CourseEntity } from 'src/entities/courses';
 import { CustomException, MessageResponse } from 'src/common';
 import { CourseService } from '../course/course.service';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CategoryCourseDto } from './dto/create-category-course.dto';
+import { EntityManager, UpdateResult } from 'typeorm';
 
 @Injectable()
 export class CategoryService {
    constructor(
       @InjectRepository(CategoryEntity)
       private categoryRepo: CategoryRepository,
-      private courseService: CourseService,
+      @InjectRepository(CourseEntity) private courseService: CourseService,
+      private entityManager: EntityManager,
    ) {}
 
    public async findById(idCategory: string): Promise<MessageResponse> {
@@ -59,13 +62,9 @@ export class CategoryService {
       }
    }
 
-   public async create(
-      authToken: string,
-      category: CreateCategoryDto,
-   ): Promise<MessageResponse> {
+   public async create(authToken: string, category: CreateCategoryDto): Promise<MessageResponse> {
       try {
-         const foundAccount =
-            await this.courseService.findAccountByToken(authToken);
+         const foundAccount = await this.courseService.findAccountByToken(authToken);
          if (!foundAccount)
             return {
                success: false,
@@ -98,26 +97,64 @@ export class CategoryService {
       }
    }
 
-   public async updateCategory(
-      id: string,
-      category: UpdateCategoryDto,
-   ): Promise<MessageResponse> {
+   public async addToCourse(categoryCourse: CategoryCourseDto): Promise<MessageResponse> {
       try {
-         const foundCategory = await this.categoryRepo.findOne({
-            where: { id },
-         });
+         const foundCategory: CategoryEntity = (await this.findById(categoryCourse.categoryId))
+            .data;
          if (!foundCategory)
             return {
                success: false,
-               message: 'this category not existed',
+               message: 'Cannot found this category',
                data: {},
             };
-         const updateCategory = {
-            ...foundCategory,
-            ...category,
-         };
-         const result = await this.categoryRepo.save(updateCategory);
-         console.log(result);
+         const foundCourseMessage = await this.courseService.findCourseById(
+            categoryCourse.courseId,
+         );
+         const foundCourse = foundCourseMessage.data.course;
+         console.log(foundCategory);
+         foundCategory.courses.push(foundCourse);
+
+         if (!foundCategory)
+            return {
+               success: false,
+               message: 'Cannot found this course',
+               data: {},
+            };
+         foundCategory.courses.push(foundCourse);
+         const result = await this.categoryRepo.save(foundCategory);
+         return await this.courseService.findCourseById(categoryCourse.courseId);
+      } catch (error) {
+         console.log(error);
+
+         throw new CustomException(
+            'add categoryCourse failed',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            error,
+         );
+      }
+   }
+
+   public async updateCategory(id: string, category: UpdateCategoryDto): Promise<MessageResponse> {
+      try {
+         const updateResult = await this.entityManager
+            .createQueryBuilder()
+            .update(CategoryEntity)
+            .set({
+               name: category.name,
+               description: category.description,
+            })
+            .where('id = :id', { id: id })
+            .returning('*')
+            .execute();
+
+         if (updateResult.affected == 0)
+            return {
+               success: false,
+               message: 'update category failed',
+               data: {},
+            };
+
+         const result = updateResult.raw[0];
          return {
             success: true,
             message: 'update category successfully',

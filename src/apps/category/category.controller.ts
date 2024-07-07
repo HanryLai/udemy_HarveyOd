@@ -15,19 +15,15 @@ import {
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import {
-   ApiBody,
-   ApiFoundResponse,
-   ApiOkResponse,
-   ApiOperation,
-   ApiTags,
-} from '@nestjs/swagger';
+import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from 'src/common';
 import { CreateCourseDto } from '../course/dto/create-course.dto';
 import { ExistToken } from 'src/common/guards/exist-token.guard';
 import { TokenCurrent } from 'src/common/decorators/token.decorator';
 import { RequestInterceptor } from 'src/common/interceptors/token-current.interceptor';
 import path from 'path';
+import { string } from 'joi';
+import { CategoryCourseDto } from './dto/create-category-course.dto';
 
 @ApiTags('Category')
 @Controller('categories')
@@ -79,8 +75,19 @@ export class CategoryController {
    @ApiBody({ type: UpdateCategoryDto, description: 'About scheme category' })
    public async update(
       @Body() category: UpdateCategoryDto,
-      id: string,
+      @Param('id') id: string,
    ): Promise<MessageResponse> {
       return await this.categoryService.updateCategory(id, category);
+   }
+
+   @HttpCode(HttpStatus.OK)
+   @Post('category/course')
+   @ApiOperation({ summary: 'Create category_course' })
+   @ApiFoundResponse({
+      description: 'Create relationship category_course',
+   })
+   @ApiBody({ type: CategoryCourseDto, description: 'About scheme category' })
+   public async AddToCourse(@Body() categoryCourse: CategoryCourseDto): Promise<MessageResponse> {
+      return await this.categoryService.addToCourse(categoryCourse);
    }
 }
