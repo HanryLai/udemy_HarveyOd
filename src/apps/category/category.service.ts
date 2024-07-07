@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager } from 'typeorm';
 
@@ -15,8 +15,10 @@ export class CategoryService {
    constructor(
       @InjectRepository(CategoryEntity)
       private categoryRepo: CategoryRepository,
-      @InjectRepository(CourseEntity) private courseService: CourseService,
       private entityManager: EntityManager,
+
+      @Inject(forwardRef(() => CourseService))
+      private courseService: CourseService,
    ) {}
 
    public async findById(idCategory: string): Promise<MessageResponse> {
@@ -65,6 +67,7 @@ export class CategoryService {
 
    public async create(authToken: string, category: CreateCategoryDto): Promise<MessageResponse> {
       try {
+         // const foundAccount = 1;
          const foundAccount = await this.courseService.findAccountByToken(authToken);
          if (!foundAccount)
             return {
@@ -92,43 +95,6 @@ export class CategoryService {
       } catch (error) {
          throw new CustomException(
             'create new category failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
-      }
-   }
-
-   public async addToCourse(categoryCourse: CategoryCourseDto): Promise<MessageResponse> {
-      try {
-         const foundCategory: CategoryEntity = (await this.findById(categoryCourse.categoryId))
-            .data;
-         if (!foundCategory)
-            return {
-               success: false,
-               message: 'Cannot found this category',
-               data: {},
-            };
-         const foundCourseMessage = await this.courseService.findCourseById(
-            categoryCourse.courseId,
-         );
-         const foundCourse = foundCourseMessage.data.course;
-         console.log(foundCategory);
-         foundCategory.courses.push(foundCourse);
-
-         if (!foundCategory)
-            return {
-               success: false,
-               message: 'Cannot found this course',
-               data: {},
-            };
-         foundCategory.courses.push(foundCourse);
-         const result = await this.categoryRepo.save(foundCategory);
-         return await this.courseService.findCourseById(categoryCourse.courseId);
-      } catch (error) {
-         console.log(error);
-
-         throw new CustomException(
-            'add categoryCourse failed',
             HttpStatus.INTERNAL_SERVER_ERROR,
             error,
          );
@@ -164,6 +130,27 @@ export class CategoryService {
       } catch (error) {
          throw new CustomException(
             ' update category failed',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            error,
+         );
+      }
+   }
+
+   public async getListCategory(listCategoryIds: string[]): Promise<CategoryEntity[]> {
+      try {
+         let listCategoryEntity: CategoryEntity[] = [];
+         await Promise.all(
+            listCategoryIds.map(async (id) => {
+               const category = await this.findById(id);
+               if (!category) throw new Error('cannot found one element category in list category');
+
+               listCategoryEntity.push(category.data);
+            }),
+         );
+         return listCategoryEntity;
+      } catch (error) {
+         throw new CustomException(
+            'add categoryCourse failed',
             HttpStatus.INTERNAL_SERVER_ERROR,
             error,
          );

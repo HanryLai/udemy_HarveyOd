@@ -70,15 +70,4 @@ export class CategoryController {
    ): Promise<MessageResponse> {
       return await this.categoryService.updateCategory(id, category);
    }
-
-   @HttpCode(HttpStatus.OK)
-   @Post('category/course')
-   @ApiOperation({ summary: 'Create category_course' })
-   @ApiFoundResponse({
-      description: 'Create relationship category_course',
-   })
-   @ApiBody({ type: CategoryCourseDto, description: 'About scheme category' })
-   public async AddToCourse(@Body() categoryCourse: CategoryCourseDto): Promise<MessageResponse> {
-      return await this.categoryService.addToCourse(categoryCourse);
-   }
 }

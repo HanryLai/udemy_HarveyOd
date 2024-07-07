@@ -1,21 +1,25 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { CourseRepository } from 'src/repositories/courses';
+import { CategoryRepository, CourseRepository } from 'src/repositories/courses';
 import { EntityManager } from 'typeorm';
 import { AccountEntity } from 'src/entities/accounts';
 import { CustomException, MessageResponse } from 'src/common';
-import { CourseEntity } from 'src/entities/courses';
+import { CategoryEntity, CourseEntity } from 'src/entities/courses';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeyTokenRepository } from 'src/repositories/auth';
 import { KeyTokenEntity } from 'src/entities/auth';
 import { RedisService } from 'src/common/redis/redis.service';
-import { stringify } from 'querystring';
+import { CategoryService } from '../category/category.service';
 
 @Injectable()
 export class CourseService {
    constructor(
       @InjectRepository(CourseEntity) private courseRepo: CourseRepository,
       @InjectRepository(KeyTokenEntity) private keyTokenRepo: KeyTokenRepository,
+
+      @Inject(forwardRef(() => CategoryService))
+      private categoryService: CategoryService,
+
       private entityManager: EntityManager,
       private redisService: RedisService,
    ) {}

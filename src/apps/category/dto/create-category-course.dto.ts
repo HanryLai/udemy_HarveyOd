@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 export class CategoryCourseDto {
    @ApiProperty()
@@ -8,7 +8,7 @@ export class CategoryCourseDto {
    courseId: string;
 
    @ApiProperty()
-   @IsString()
+   @IsArray()
    @IsNotEmpty()
-   categoryId: string;
+   categoryIds: string[];
 }
