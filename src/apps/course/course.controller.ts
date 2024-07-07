@@ -10,11 +10,13 @@ import {
    Param,
    Query,
    ParseIntPipe,
+   Put,
 } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TokenCurrent, RequestInterceptor, ExistToken, MessageResponse } from 'src/common';
+import { CategoryCourseDto } from '../category/dto';
 
 @ApiTags('Courses')
 @Controller('courses')
@@ -56,5 +58,22 @@ export class CourseController {
       @TokenCurrent() token: string,
    ): Promise<MessageResponse> {
       return await this.courseService.create(createCourseDto, token);
+   }
+
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
+   @HttpCode(HttpStatus.OK)
+   @Put('course/categories')
+   @ApiOperation({ summary: 'Create new course category relationship' })
+   @ApiOkResponse({ description: 'Create new course category relationship successfully' })
+   @ApiBody({
+      type: CategoryCourseDto,
+      description: 'About information of course category relationship ',
+   })
+   public async UpdateCourseCategory(
+      @Body() categoryCourse: CategoryCourseDto,
+      @TokenCurrent() token: string,
+   ): Promise<MessageResponse> {
+      return await this.courseService.updateCourseCategory(categoryCourse, token);
    }
 }

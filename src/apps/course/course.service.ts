@@ -10,6 +10,7 @@ import { KeyTokenRepository } from 'src/repositories/auth';
 import { KeyTokenEntity } from 'src/entities/auth';
 import { RedisService } from 'src/common/redis/redis.service';
 import { CategoryService } from '../category/category.service';
+import { CategoryCourseDto } from '../category/dto';
 
 @Injectable()
 export class CourseService {
@@ -81,7 +82,7 @@ export class CourseService {
          return {
             success: true,
             message: 'Found list course in offset ' + offset,
-            data: { ...listCourse, offset: offset, limit: limit },
+            data: { courses: listCourse, offset: offset, limit: limit },
          };
       } catch (error) {
          throw new CustomException(
@@ -133,6 +134,36 @@ export class CourseService {
       } catch (error) {
          throw new CustomException(
             'create new course failed',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            error,
+         );
+      }
+   }
+
+   public async updateCourseCategory(
+      categoryCourse: CategoryCourseDto,
+      token: string,
+   ): Promise<MessageResponse> {
+      try {
+         const dataFoundCourse = (await this.findCourseById(categoryCourse.courseId)).data;
+         const foundCourse: CourseEntity = dataFoundCourse.course;
+         const listCategoryEntity = await this.categoryService.getListCategory(
+            categoryCourse.categoryIds,
+         );
+
+         const result = await this.courseRepo.save({
+            ...foundCourse,
+            categories: listCategoryEntity,
+         });
+
+         return {
+            success: true,
+            message: 'create category_course relationship successfully',
+            data: { ...result },
+         };
+      } catch (error) {
+         throw new CustomException(
+            'add categoryCourse failed',
             HttpStatus.INTERNAL_SERVER_ERROR,
             error,
          );

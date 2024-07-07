@@ -10,8 +10,4 @@ export class CategoryEntity extends BaseEntity<CategoryEntity> implements ICateg
 
    @Column({ type: 'varchar', name: 'category_description' })
    description: string;
-
-   @ManyToMany(() => CourseEntity, { cascade: true })
-   @JoinTable()
-   courses: CourseEntity[];
 }
