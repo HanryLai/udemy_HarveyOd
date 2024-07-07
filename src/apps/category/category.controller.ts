@@ -4,10 +4,8 @@ import {
    Post,
    Body,
    Param,
-   Delete,
    HttpStatus,
    HttpCode,
-   Headers,
    UseGuards,
    UseInterceptors,
    Put,
@@ -16,13 +14,8 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { MessageResponse } from 'src/common';
+import { MessageResponse, RequestInterceptor, ExistToken, TokenCurrent } from 'src/common';
 import { CreateCourseDto } from '../course/dto/create-course.dto';
-import { ExistToken } from 'src/common/guards/exist-token.guard';
-import { TokenCurrent } from 'src/common/decorators/token.decorator';
-import { RequestInterceptor } from 'src/common/interceptors/token-current.interceptor';
-import path from 'path';
-import { string } from 'joi';
 import { CategoryCourseDto } from './dto/create-category-course.dto';
 
 @ApiTags('Category')
