@@ -145,6 +145,15 @@ export class CourseService {
       token: string,
    ): Promise<MessageResponse> {
       try {
+         const foundAccount = await this.findAccountByToken(token);
+         //check account
+         if (!foundAccount)
+            return {
+               success: false,
+               message: 'cannot found account ',
+               data: {},
+            };
+
          const dataFoundCourse = (await this.findCourseById(categoryCourse.courseId)).data;
          const foundCourse: CourseEntity = dataFoundCourse.course;
          const listCategoryEntity = await this.categoryService.getListCategory(
@@ -155,6 +164,8 @@ export class CourseService {
             ...foundCourse,
             categories: listCategoryEntity,
          });
+
+         await this.delCourseOnRedis(foundCourse.id);
 
          return {
             success: true,
@@ -221,5 +232,9 @@ export class CourseService {
 
    public async getCourseOnRedis(id: string): Promise<CourseEntity> {
       return await this.redisService.get<CourseEntity>('course:' + id);
+   }
+
+   public async delCourseOnRedis(id: string): Promise<void> {
+      return await this.redisService.delete('course:' + id);
    }
 }
