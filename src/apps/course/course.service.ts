@@ -187,6 +187,15 @@ export class CourseService {
       token: string,
    ): Promise<MessageResponse> {
       try {
+         const foundAccount = await this.findAccountByToken(token);
+         //check account
+         if (!foundAccount)
+            return {
+               success: false,
+               message: 'cannot found account ',
+               data: {},
+            };
+
          const updateResult = await this.entityManager
             .createQueryBuilder()
             .update(CourseEntity)
