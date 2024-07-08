@@ -10,7 +10,7 @@ import { KeyTokenRepository } from 'src/repositories/auth';
 import { KeyTokenEntity } from 'src/entities/auth';
 import { RedisService } from 'src/common/redis/redis.service';
 import { CategoryService } from '../category/category.service';
-import { CategoryCourseDto } from '../category/dto';
+import { CategoryCourseDto, UpdateCategoryDto } from '../category/dto';
 
 @Injectable()
 export class CourseService {
@@ -181,6 +181,43 @@ export class CourseService {
       }
    }
 
+   public async updateCourse(
+      updateCourse: UpdateCategoryDto,
+      id: string,
+      token: string,
+   ): Promise<MessageResponse> {
+      try {
+         const updateResult = await this.entityManager
+            .createQueryBuilder()
+            .update(CourseEntity)
+            .set({
+               ...updateCourse,
+            })
+            .where('id = :id', { id: id })
+            .returning('*')
+            .execute();
+         if (updateResult.affected == 0)
+            return {
+               success: false,
+               message: 'Update course failed ',
+               data: {},
+            };
+
+         const updatedCourse = updateResult.raw;
+         return {
+            success: true,
+            message: 'Update course successfully ',
+            data: { updatedCourse },
+         };
+      } catch (error) {
+         throw new CustomException(
+            'add categoryCourse failed',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            error,
+         );
+      }
+   }
+
    /**
     * find account an check permission // using temporary because don't know how to using verifyToken
     */
@@ -224,7 +261,7 @@ export class CourseService {
    }
 
    /**
-    * save course to redis
+    * Using redis service
     */
    public async saveCourseToRedis(course: CourseEntity): Promise<void> {
       await this.redisService.set('course:' + course.id, course, 60 * 30);

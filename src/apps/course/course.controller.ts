@@ -13,7 +13,7 @@ import {
    Put,
 } from '@nestjs/common';
 import { CourseService } from './course.service';
-import { CreateCourseDto } from './dto/create-course.dto';
+import { CreateCourseDto, UpdateCourseDto } from './dto/';
 import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TokenCurrent, RequestInterceptor, ExistToken, MessageResponse } from 'src/common';
 import { CategoryCourseDto } from '../category/dto';
@@ -75,5 +75,23 @@ export class CourseController {
       @TokenCurrent() token: string,
    ): Promise<MessageResponse> {
       return await this.courseService.updateCourseCategory(categoryCourse, token);
+   }
+
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
+   @HttpCode(HttpStatus.OK)
+   @Put('course/update/:id')
+   @ApiOperation({ summary: 'Update course' })
+   @ApiOkResponse({ description: 'Update course successfully' })
+   @ApiBody({
+      type: UpdateCourseDto,
+      description: 'About information of course ',
+   })
+   public async UpdateCourse(
+      @Body() updateCourse: UpdateCourseDto,
+      @Param('id') id: string,
+      @TokenCurrent() token: string,
+   ): Promise<MessageResponse> {
+      return await this.courseService.updateCourse(updateCourse, id, token);
    }
 }
