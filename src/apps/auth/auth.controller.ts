@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Put, Req, Res } from '@nestjs/common';
+import { Body, Controller, Post, Put, Req, Res } from '@nestjs/common';
 import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
@@ -11,7 +11,6 @@ import { RegisterDto, ResetPasswordDto, LoginDto, ForgotPasswordDto } from './dt
 export class AuthController {
    constructor(private readonly authService: AuthService) {}
 
-   @HttpCode(HttpStatus.OK)
    @Post('register')
    @ApiOperation({ summary: 'Register a new user' })
    @ApiOkResponse({ description: 'Registration was successful' })
@@ -20,7 +19,6 @@ export class AuthController {
       return await this.authService.register(registerDto);
    }
 
-   @HttpCode(HttpStatus.OK)
    @Post('login')
    @ApiOperation({ summary: 'Log in a user' })
    @ApiOkResponse({ description: 'Login was successful' })
@@ -34,7 +32,6 @@ export class AuthController {
       return res.send(result);
    }
 
-   @HttpCode(HttpStatus.OK)
    @Put('verify-account')
    @ApiOperation({ summary: 'Verify account' })
    @ApiOkResponse({ description: 'Account verification was successful' })
@@ -43,7 +40,6 @@ export class AuthController {
       return await this.authService.verifyAccount(email);
    }
 
-   @HttpCode(HttpStatus.OK)
    @Post('forgot-password')
    @ApiOperation({ summary: 'Forgot password' })
    @ApiOkResponse({ description: 'Forgot password was successful' })
@@ -52,7 +48,6 @@ export class AuthController {
       return await this.authService.forgotPassword(forgotDto);
    }
 
-   @HttpCode(HttpStatus.OK)
    @Put('reset-password')
    @ApiOperation({ summary: 'Reset password' })
    @ApiOkResponse({ description: 'Reset password was successful' })
