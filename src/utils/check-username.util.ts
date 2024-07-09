@@ -1,4 +1,5 @@
-import { CustomException } from 'src/common/exceptions';
+import { HttpStatus } from '@nestjs/common';
+import { ErrorResponse } from 'src/common/exceptions';
 
 const checkUsername = (username: string): boolean => {
    try {
@@ -9,7 +10,11 @@ const checkUsername = (username: string): boolean => {
       }
       return false;
    } catch (error) {
-      throw new CustomException(error.message);
+      throw new ErrorResponse({
+         message: 'Error checking username',
+         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+         metadata: {},
+      });
    }
 };
 
