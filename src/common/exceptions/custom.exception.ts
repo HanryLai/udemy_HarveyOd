@@ -1,15 +1,20 @@
-export class CustomException extends Error {
-   constructor(message: string, public code?: number, public details?: any) {
-      super(message);
+import { Response } from 'express';
+import { MessageResponse } from '../responses';
+export class ErrorResponse extends Error {
+   public message: string;
+   public metadata: any;
+   public statusCode: number;
+   constructor({ message, statusCode, metadata = {} }: MessageResponse) {
+      super();
+      this.message = message;
+      this.statusCode = statusCode;
+      this.metadata = metadata;
+   }
 
-      // Set the prototype explicitly.
-      Object.setPrototypeOf(this, CustomException.prototype);
-
-      this.name = this.constructor.name;
-
-      // Maintain proper stack trace for where our error was thrown (only available on V8 engines)
-      if (Error.captureStackTrace) {
-         Error.captureStackTrace(this, this.constructor);
-      }
+   send(res: Response, headers: Record<string, string> = {}): Response {
+      Object.keys(headers).forEach((key) => {
+         res.header(key, headers[key]);
+      });
+      return res.status(this.statusCode).json(this);
    }
 }
