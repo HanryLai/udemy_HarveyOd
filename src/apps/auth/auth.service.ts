@@ -5,8 +5,8 @@ import { Response, Request } from 'express';
 import { EntityManager } from 'typeorm';
 
 import checkUsername from 'src/utils/check-username.util';
-import { CustomException } from 'src/common';
-import { MessageResponse } from 'src/common/responses';
+import { ErrorResponse, HttpExceptionFilter } from 'src/common';
+import { MessageResponse, OK } from 'src/common/responses';
 import { ForgotPasswordDto, RegisterDto, ResetPasswordDto } from './dtos';
 import { AccountEntity } from 'src/entities/accounts';
 import { AccountRepository } from 'src/repositories/accounts';
@@ -26,43 +26,45 @@ export class AuthService {
       private readonly keyTokenService: KeytokenService,
       private readonly mailService: MailService,
       private readonly otpService: OtpService,
-   ) {
-   }
+   ) {}
 
    public async register(registerDto: RegisterDto): Promise<MessageResponse> {
-      !await validateUsername(registerDto.username);
+      !(await validateUsername(registerDto.username));
       return await this.createAccount(registerDto);
    }
 
    public async verifyAccount(email: string): Promise<MessageResponse> {
       const account = await this.findAccountByEmail(email);
       if (!account) {
-         return {
-            success: false,
+         return new ErrorResponse({
             message: 'Account not found',
-            data: {},
-         };
+            statusCode: HttpStatus.NOT_FOUND,
+            metadata: {},
+         });
       }
       if (account.isVerified) {
-         return {
-            success: false,
+         return new ErrorResponse({
             message: 'Account already verified',
-            data: {},
-         };
+            statusCode: HttpStatus.CONFLICT,
+            metadata: {},
+         });
       }
       account.isVerified = true;
       const updateAccount = await this.accountRepository.save(account);
-      return {
-         success: true,
-         message: 'Account verified successfully',
-         data: updateAccount,
-      };
+      return new OK({
+         message: 'Account verified',
+         metadata: updateAccount,
+      });
    }
 
-   public async login(loginDto: LoginDto, req: Request, res: Response): Promise<MessageResponse> {
+   public async login(
+      loginDto: LoginDto,
+      req: Request,
+      res: Response,
+   ): Promise<MessageResponse | HttpExceptionFilter> {
       try {
          // validate username
-         !await validateUsername(loginDto.username);
+         !(await validateUsername(loginDto.username));
 
          // check username is mail or not
          const checkUsernameResult = checkUsername(loginDto.username);
@@ -73,16 +75,18 @@ export class AuthService {
             : this.findAccountByUsername;
 
          const foundAccount = await findAccountMethod.call(this, loginDto.username);
+
          if (!foundAccount) {
-            return {
-               success: false,
+            return new ErrorResponse({
                message: 'Account not found',
-               data: {},
-            };
+               statusCode: HttpStatus.NOT_FOUND,
+               metadata: {},
+            });
          }
+
          return await this.transactionLoginAccount(loginDto, foundAccount, req, res);
-      } catch (err) {
-         throw new CustomException('', HttpStatus.OK, err);
+      } catch (error) {
+         return new HttpExceptionFilter({ message: 'login error', error: error });
       }
    }
 
@@ -92,28 +96,28 @@ export class AuthService {
          // check username is mail or not
          const account = await this.findAccountByEmail(email);
          if (!account) {
-            return {
-               success: false,
+            return new ErrorResponse({
                message: 'Account not found',
-               data: {},
-            };
+               statusCode: HttpStatus.NOT_FOUND,
+               metadata: {},
+            });
          }
 
          // check password
          if (bcrypt.compareSync(newPassword, account.password)) {
-            return {
-               success: false,
-               message: 'New password is same as old password',
-               data: {},
-            };
+            return new ErrorResponse({
+               message: 'New password should not be same as old password',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          }
          // check otp
          if (!(await this.otpService.validateOtp(email, otp))) {
-            return {
-               success: false,
+            return new ErrorResponse({
                message: 'Invalid OTP',
-               data: {},
-            };
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          }
          // update password
          account.password = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(10));
@@ -121,17 +125,12 @@ export class AuthService {
          // delete otp
          await this.otpService.deleteOtp(email);
 
-         return {
-            success: true,
-            message: 'Forgot password success',
-            data: {},
-         };
+         return new OK({
+            message: 'Password reset successfully',
+            metadata: {},
+         });
       } catch (error) {
-         throw new CustomException(
-            'Forgot pass Account Fail',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({ message: 'forgot password error', error: error });
       }
    }
 
@@ -141,37 +140,32 @@ export class AuthService {
          // check username is mail or not
          const account = await this.findAccountByEmail(email);
          if (!account) {
-            return {
-               success: false,
+            return new ErrorResponse({
                message: 'Account not found',
-               data: {},
-            };
+               statusCode: HttpStatus.NOT_FOUND,
+               metadata: {},
+            });
          }
 
          // check password
          if (!bcrypt.compareSync(oldPassword, account.password)) {
-            return {
-               success: false,
-               message: 'Password is incorrect',
-               data: {},
-            };
+            return new ErrorResponse({
+               message: 'Old password is incorrect',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          }
 
          // update password
          const updatePassword = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(10));
          await this.accountRepository.update(account.id, { password: updatePassword });
 
-         return {
-            success: true,
-            message: 'Reset password success',
-            data: {},
-         };
+         return new OK({
+            message: 'Password updated successfully',
+            metadata: {},
+         });
       } catch (error) {
-         throw new CustomException(
-            'Reset pass Account Fail',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({ message: 'reset password error', error: error });
       }
    }
 
@@ -187,11 +181,11 @@ export class AuthService {
          // check password
          const checkPassword = bcrypt.compareSync(loginDto.password, account.password);
          if (!checkPassword) {
-            return {
-               success: false,
+            return new ErrorResponse({
                message: 'Password is incorrect',
-               data: {},
-            };
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          }
 
          // update last login
@@ -235,21 +229,16 @@ export class AuthService {
          // set cookie
          await this.setRefreshTokenCookie(res, generateKey.accessToken);
 
-         return {
-            success: true,
-            message: 'Login success',
-            data: {
+         return new OK({
+            message: 'Login successfully',
+            metadata: {
                username: account.username,
-               email: account.email,
                isVerified: account.isVerified,
+               accessToken: generateKey.accessToken,
             },
-         };
+         });
       } catch (error) {
-         throw new CustomException(
-            'Transaction Login Internal',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({ message: 'transaction login error', error: error });
       }
    }
 
@@ -266,11 +255,7 @@ export class AuthService {
             },
          });
       } catch (error) {
-         throw new CustomException(
-            'Find account by username fail',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({ message: 'find account by username error', error: error });
       }
    }
 
@@ -287,7 +272,7 @@ export class AuthService {
             },
          });
       } catch (error) {
-         throw new CustomException('Find By Emal Fail', HttpStatus.INTERNAL_SERVER_ERROR, error);
+         throw new HttpExceptionFilter({ message: 'find account by email error', error: error });
       }
    }
 
@@ -298,13 +283,13 @@ export class AuthService {
             where: [{ username: registerDto.username }, { email: registerDto.email }],
             // select: { id: true, username: true, password: true, email: true, isVerified: true },
          });
-
+         
          if (foundAccount) {
-            return {
-               success: false,
+            return new ErrorResponse({
                message: 'Account already exists',
-               data: {},
-            };
+               statusCode: HttpStatus.CONFLICT,
+               metadata: {},
+            });
          }
 
          const salt = bcrypt.genSaltSync(10);
@@ -322,17 +307,12 @@ export class AuthService {
 
          // send mail
          await this.mailService.sendOTPEmail(saveAccount.username, saveAccount.email, otp);
-         return {
-            success: true,
-            data: saveAccount,
-            message: 'User registered successfully',
-         };
+         return new OK({
+            message: 'Account created successfully',
+            metadata: saveAccount,
+         });
       } catch (error) {
-         throw new CustomException(
-            'Account creation failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({ message: 'create account error', error: error });
       }
    }
 
