@@ -7,9 +7,10 @@ import { AccountEntity } from 'src/entities/accounts';
 import { MailModule } from './mail/mail.module';
 import { KeytokenModule } from './keytoken/keytoken.module';
 import { OtpModule } from './otp/otp.module';
+import { SessionsModule } from './sessions/sessions.module';
 
 @Module({
-   imports: [TypeOrmModule.forFeature([AccountEntity]), MailModule, KeytokenModule, OtpModule],
+   imports: [TypeOrmModule.forFeature([AccountEntity]), MailModule, KeytokenModule, OtpModule, SessionsModule],
    providers: [AuthService],
    controllers: [AuthController],
 })
