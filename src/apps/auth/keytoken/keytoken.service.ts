@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
 
-import { KeyTokenEntity } from 'src/entities/auth';
-import { KeyTokenRepository } from 'src/repositories/auth';
 import { HttpExceptionFilter } from 'src/common';
 import { ITokenPair } from './interface/tokenPair.interface';
 import { IPayload } from './interface/payload.interface';
@@ -12,10 +10,7 @@ import { IResponseToken } from './interface';
 
 @Injectable()
 export class KeytokenService {
-   constructor(
-      @InjectRepository(KeyTokenEntity) private readonly keyTokenRepository: KeyTokenRepository,
-      private readonly jwtService: JwtService,
-   ) {}
+   constructor(private readonly jwtService: JwtService) {}
 
    public async generateRsaKeyPair(): Promise<{
       publicKey: string;
