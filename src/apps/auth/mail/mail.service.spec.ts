@@ -3,6 +3,7 @@ import { Queue } from 'bull';
 import { MailService } from './mail.service';
 import { OtpService } from '../otp/otp.service';
 import { SendOtpDto } from './dto/send-otp.dto';
+import { OK } from 'src/common';
 
 describe('MailService', () => {
    let service: MailService;
@@ -56,15 +57,21 @@ describe('MailService', () => {
       expect(otpService.validateOtp).toHaveBeenCalledWith(validOtp.email, validOtp.otp);
    });
 
-   // it('should send new OTP', async () => {
-   //    jest.spyOn(otpService, 'generateAndStoreOtp').mockResolvedValueOnce('123456');
-   //    jest.spyOn(service, 'sendOTPEmail').mockResolvedValueOnce(true);
-   //    const sendOtpDto: SendOtpDto = { username: 'test', email: 'test@test.com' };
-   //    const result = await service.sendNewOtp(sendOtpDto);
-   //    expect(result).toEqual({
-         
-   //    });
-   //    expect(otpService.generateAndStoreOtp).toBeCalledWith('test@test.com');
-   //    expect(service.sendOTPEmail).toBeCalledWith('test', 'test@test.com', '123456');
-   // });
+   it('should send new OTP', async () => {
+      jest.spyOn(otpService, 'generateAndStoreOtp').mockResolvedValueOnce('123456');
+      jest.spyOn(service, 'sendOTPEmail').mockResolvedValueOnce(true);
+      const sendOtpDto: SendOtpDto = { username: 'test', email: 'test@test.com' };
+      const result = await service.sendNewOtp(sendOtpDto);
+      expect(result).toEqual(
+         new OK({
+            message: 'OTP sent successfully',
+            metadata: {
+               email: 'test@test.com',
+               otp: '123456',
+            },
+         }),
+      );
+      expect(otpService.generateAndStoreOtp).toBeCalledWith('test@test.com');
+      expect(service.sendOTPEmail).toBeCalledWith('test', 'test@test.com', '123456');
+   });
 });
