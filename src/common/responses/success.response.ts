@@ -1,11 +1,12 @@
+import { HttpStatus } from '@nestjs/common';
+import { MessageResponse } from './interface';
 import { Response } from 'express';
-import { MessageResponse } from '../responses';
-export class ErrorResponse extends Error {
+export class SuccessResponse {
    public message: string;
    public metadata: any;
    public statusCode: number;
-   constructor({ message, statusCode, metadata = {} }: MessageResponse) {
-      super();
+
+   constructor({ message, statusCode = HttpStatus.OK, metadata = {} }: MessageResponse) {
       this.message = message;
       this.statusCode = statusCode;
       this.metadata = metadata;

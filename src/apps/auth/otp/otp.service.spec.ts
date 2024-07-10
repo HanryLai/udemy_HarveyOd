@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OtpService } from './otp.service';
 import { RedisService } from 'src/common/redis/redis.service';
+import { ErrorResponse, OK } from 'src/common';
 
 describe('OtpService', () => {
    let service: OtpService;
@@ -35,7 +36,12 @@ describe('OtpService', () => {
 
       const result = await service.validateOtp(email, otp);
 
-      expect(result).toBe(true);
+      expect(result).toStrictEqual(
+         new OK({
+            message: 'Otp is valid',
+            metadata: {},
+         }),
+      );
       expect(redisService.get).toHaveBeenCalledWith(email);
    });
 
@@ -48,23 +54,14 @@ describe('OtpService', () => {
 
       const result = await service.validateOtp(email, wrongOtp);
 
-      expect(result).toBe(false);
+      expect(result).toStrictEqual(
+         new ErrorResponse({
+            message: 'OTP is invalid',
+            metadata: {},
+         }),
+      );
       expect(redisService.get).toHaveBeenCalledWith(email);
    });
-
-   // describe('generateAndStoreOtp', () => {
-   //    it('should generate an OTP, store it in Redis, and return it', async () => {
-   //       const email = 'test@test.com';
-   //       const otp = '123456';
-
-   //       const setSpy = jest.spyOn(redisService, 'set').mockImplementation(() => Promise.resolve());
-
-   //       const result = await service.generateAndStoreOtp(email);
-
-   //       expect(setSpy).toHaveBeenCalledWith(email, otp, 180);
-   //       expect(result).toBe(otp);
-   //    });
-   // });
 
    describe('deleteOtp', () => {
       it('should delete the OTP associated with the given email', async () => {

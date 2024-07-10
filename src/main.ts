@@ -16,10 +16,11 @@ async function bootstrap() {
 
    app.use(helmet());
 
+   app.enableCors();
+
    const globalPrefix = 'api';
    app.setGlobalPrefix(globalPrefix);
 
-   app.enableCors();
 
    const configSwagger = new DocumentBuilder()
       .setTitle('API Products')
@@ -31,9 +32,11 @@ async function bootstrap() {
    SwaggerModule.setup('api', app, document);
 
    const configService = app.get(ConfigService);
+
+
    const port = configService.get<string>('PORT') || 3000;
    await app.listen(port, () => {
-      console.log('Listening at ');
+      console.log('Listening at https://harveyod.local2/api/');
    });
 }
 

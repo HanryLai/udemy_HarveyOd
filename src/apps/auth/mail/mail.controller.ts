@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { MessageResponse } from 'src/common';
+import { MessageResponse, OK } from 'src/common';
 import { ValidOtp } from './dto/vaild-otp.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { MailService } from './mail.service';
@@ -9,8 +9,7 @@ import { MailService } from './mail.service';
 @ApiTags('Mail')
 @Controller('mail')
 export class MailController {
-   constructor(private readonly mailService: MailService) {
-   }
+   constructor(private readonly mailService: MailService) {}
 
    @HttpCode(HttpStatus.OK)
    @Post('valid-otp')
@@ -19,12 +18,10 @@ export class MailController {
    @ApiBody({ type: ValidOtp, description: 'OTP to validate' })
    public async validateAccount(@Body() validOtp: ValidOtp): Promise<MessageResponse> {
       const result = await this.mailService.validateOtp(validOtp);
-      return {
-         success: result.success,
+      return new OK({
          message: result ? 'OTP is valid' : 'OTP is invalid',
-         data: {},
-      };
-
+         metadata: {},
+      });
    }
 
    @HttpCode(HttpStatus.OK)

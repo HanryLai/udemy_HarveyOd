@@ -1,21 +1,16 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
+
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
 
-import { KeyTokenEntity } from 'src/entities/auth';
-import { KeyTokenRepository } from 'src/repositories/auth';
-import { CustomException } from 'src/common';
+import { HttpExceptionFilter } from 'src/common';
 import { ITokenPair } from './interface/tokenPair.interface';
 import { IPayload } from './interface/payload.interface';
 import { IResponseToken } from './interface';
 
 @Injectable()
 export class KeytokenService {
-   constructor(
-      @InjectRepository(KeyTokenEntity) private readonly keyTokenRepository: KeyTokenRepository,
-      private readonly jwtService: JwtService,
-   ) {}
+   constructor(private readonly jwtService: JwtService) {}
 
    public async generateRsaKeyPair(): Promise<{
       publicKey: string;
@@ -66,7 +61,10 @@ export class KeytokenService {
             refreshToken: refreshToken,
          };
       } catch (error) {
-         throw new CustomException(error);
+         throw new HttpExceptionFilter({
+            message: 'Error creating token pair',
+            error: error.message,
+         });
       }
    }
 
@@ -82,11 +80,10 @@ export class KeytokenService {
             privateKey: privateKey,
          };
       } catch (error) {
-         throw new CustomException(
-            'Error creating new token',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'Error creating new token',
+            error: error.message,
+         });
       }
    }
 
@@ -97,11 +94,10 @@ export class KeytokenService {
             algorithms: ['RS256'],
          });
       } catch (error) {
-         throw new CustomException(
-            'Error verifying token',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'Error verifying token',
+            error: error.message,
+         });
       }
    }
 }
