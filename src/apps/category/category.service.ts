@@ -4,7 +4,7 @@ import { EntityManager } from 'typeorm';
 
 import { CategoryRepository } from 'src/repositories/courses';
 import { CategoryEntity, CourseEntity } from 'src/entities/courses';
-import { CustomException, MessageResponse } from 'src/common';
+import { ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 
 import { CourseService } from '../course/course.service';
 
@@ -29,39 +29,41 @@ export class CategoryService {
             },
          });
          if (!foundCategory)
-            return {
-               success: true,
+            return new ErrorResponse({
                message: 'Cannot found this category',
-               data: {},
-            };
-         return {
-            success: true,
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+         return new OK({
             message: 'Found category',
-            data: foundCategory,
-         };
+            metadata: {
+               foundCategory,
+            },
+         });
       } catch (error) {
-         console.log(error);
-         throw new CustomException('Server error', 500, error);
+         throw new HttpExceptionFilter({ message: 'Error find category by id', error: error });
       }
    }
 
    public async findAll(): Promise<MessageResponse> {
       try {
          const listCategory = await this.categoryRepo.find();
-         const message = listCategory.length
-            ? 'Found list category successfully'
-            : 'Cannot have any category';
-         return {
-            success: true,
-            message: message,
-            data: listCategory,
-         };
+         if (listCategory.length)
+            return new ErrorResponse({
+               message: 'Not have any category',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+
+         return new OK({
+            message: 'Found list category successfully',
+            metadata: { listCategory },
+         });
       } catch (error) {
-         throw new CustomException(
-            'Find all category failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'Error find all category ',
+            error: error,
+         });
       }
    }
 
@@ -70,10 +72,11 @@ export class CategoryService {
          // const foundAccount = 1;
          const foundAccount = await this.courseService.findAccountByToken(authToken);
          if (!foundAccount)
-            return {
-               success: false,
+            return new ErrorResponse({
                message: "Don't have permisstion or don't login before",
-            };
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          const foundCategory = await this.categoryRepo.findOne({
             where: {
                name: category.name,
@@ -81,23 +84,21 @@ export class CategoryService {
          });
 
          if (foundCategory)
-            return {
-               success: false,
+            return new ErrorResponse({
                message: 'This name existed, create failed',
-               data: {},
-            };
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: { foundCategory },
+            });
          const result = await this.categoryRepo.save(category);
-         return {
-            success: true,
+         return new OK({
             message: 'Create new category successfully',
-            data: result,
-         };
+            metadata: { result },
+         });
       } catch (error) {
-         throw new CustomException(
-            'create new category failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'Create new category have error',
+            error: error,
+         });
       }
    }
 
@@ -115,24 +116,22 @@ export class CategoryService {
             .execute();
 
          if (updateResult.affected == 0)
-            return {
-               success: false,
+            return new ErrorResponse({
                message: 'update category failed',
-               data: {},
-            };
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
 
          const result = updateResult.raw[0];
-         return {
-            success: true,
+         return new OK({
             message: 'update category successfully',
-            data: { result },
-         };
+            metadata: { result },
+         });
       } catch (error) {
-         throw new CustomException(
-            ' update category failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'update category failed',
+            error: error,
+         });
       }
    }
 
@@ -142,18 +141,22 @@ export class CategoryService {
          await Promise.all(
             listCategoryIds.map(async (id) => {
                const category = await this.findById(id);
-               if (!category) throw new Error('cannot found one element category in list category');
+               if (!category)
+                  return new ErrorResponse({
+                     message: 'Cannot found one element category in list category',
+                     statusCode: HttpStatus.BAD_REQUEST,
+                     metadata: {},
+                  });
 
-               listCategoryEntity.push(category.data);
+               listCategoryEntity.push(category.metadata);
             }),
          );
          return listCategoryEntity;
       } catch (error) {
-         throw new CustomException(
-            'add categoryCourse failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'Get list categories failed',
+            error: error,
+         });
       }
    }
 }
