@@ -4,7 +4,7 @@ import { EntityManager } from 'typeorm';
 
 import { CategoryRepository } from 'src/repositories/courses';
 import { CategoryEntity, CourseEntity } from 'src/entities/courses';
-import { ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
+import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 
 import { CourseService } from '../course/course.service';
 
@@ -90,7 +90,7 @@ export class CategoryService {
                metadata: { foundCategory },
             });
          const result = await this.categoryRepo.save(category);
-         return new OK({
+         return new CREATED({
             message: 'Create new category successfully',
             metadata: { result },
          });

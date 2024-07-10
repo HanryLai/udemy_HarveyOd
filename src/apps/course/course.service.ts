@@ -1,9 +1,9 @@
 import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { CategoryRepository, CourseRepository } from 'src/repositories/courses';
+import { CourseRepository } from 'src/repositories/courses';
 import { EntityManager } from 'typeorm';
 import { AccountEntity } from 'src/entities/accounts';
-import { CustomException, MessageResponse } from 'src/common';
+import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { CategoryEntity, CourseEntity } from 'src/entities/courses';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeyTokenRepository } from 'src/repositories/auth';
@@ -30,39 +30,36 @@ export class CourseService {
          //check on redis
          const foundRedis = await this.getCourseOnRedis(id);
          if (foundRedis)
-            return {
-               success: true,
-               message: 'create course successfully',
-               data: {
+            return new OK({
+               message: 'Found course',
+               metadata: {
                   course: foundRedis,
                   category: foundRedis.categories,
                },
-            };
+            });
          //find on database
          const foundCourse = await this.courseRepo.findOne({
             where: { id },
          });
          if (!foundCourse)
-            return {
-               success: false,
-               message: 'this course not exist ',
-               data: {},
-            };
+            return new ErrorResponse({
+               message: 'this course not exist',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          await this.saveCourseToRedis(foundCourse);
-         return {
-            success: true,
-            message: 'create course successfully',
-            data: {
-               course: foundCourse,
-               category: foundCourse.categories,
+         return new OK({
+            message: 'Found course',
+            metadata: {
+               course: foundRedis,
+               category: foundRedis.categories,
             },
-         };
+         });
       } catch (error) {
-         throw new CustomException(
-            'create new course failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'create new course failed',
+            error: error,
+         });
       }
    }
 
@@ -74,22 +71,25 @@ export class CourseService {
             take: limit,
          });
          if (!listCourse)
-            return {
-               success: false,
-               message: 'Cannot found',
-               data: {},
-            };
-         return {
-            success: true,
+            return new ErrorResponse({
+               message: 'not have any courses',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+
+         return new OK({
             message: 'Found list course in offset ' + offset,
-            data: { courses: listCourse, offset: offset, limit: limit },
-         };
+            metadata: {
+               courses: listCourse,
+               offset: offset,
+               limit: limit,
+            },
+         });
       } catch (error) {
-         throw new CustomException(
-            'Find course with offset failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'Find course with offset failed',
+            error: error,
+         });
       }
    }
 
@@ -99,22 +99,22 @@ export class CourseService {
          const foundAccount = await this.findAccountByToken(refreshToken);
          //check account
          if (!foundAccount)
-            return {
-               success: false,
-               message: 'cannot found account ',
-               data: {},
-            };
+            return new ErrorResponse({
+               message: 'cannot found account',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          // check duplicate title inside found user
          const isDuplicate = await this.isDuplicateTitleCourse(
             createCourseDto.title,
             foundAccount.id,
          );
          if (isDuplicate === true)
-            return {
-               success: false,
+            return new ErrorResponse({
                message: 'create course failed because this title for instructor existed',
-               data: {},
-            };
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          //save course
          const result = await this.entityManager.transaction(async (entityManager) => {
             const newCourse = new CourseEntity({
@@ -125,18 +125,22 @@ export class CourseService {
             return newCourse;
          });
 
-         if (result === null) throw new Error('Error save course');
-         return {
-            success: true,
+         if (result === null)
+            return new ErrorResponse({
+               message: 'create course failed',
+               metadata: {},
+            });
+         return new CREATED({
             message: 'create course successfully',
-            data: result,
-         };
+            metadata: {
+               result,
+            },
+         });
       } catch (error) {
-         throw new CustomException(
-            'create new course failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'create new course failed',
+            error: error,
+         });
       }
    }
 
@@ -148,13 +152,13 @@ export class CourseService {
          const foundAccount = await this.findAccountByToken(token);
          //check account
          if (!foundAccount)
-            return {
-               success: false,
-               message: 'cannot found account ',
-               data: {},
-            };
+            return new ErrorResponse({
+               message: 'cannot found account',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
 
-         const dataFoundCourse = (await this.findCourseById(categoryCourse.courseId)).data;
+         const dataFoundCourse = (await this.findCourseById(categoryCourse.courseId)).metadata;
          const foundCourse: CourseEntity = dataFoundCourse.course;
          const listCategoryEntity = await this.categoryService.getListCategory(
             categoryCourse.categoryIds,
@@ -167,17 +171,17 @@ export class CourseService {
 
          await this.delCourseOnRedis(foundCourse.id);
 
-         return {
-            success: true,
-            message: 'create category_course relationship successfully',
-            data: { ...result },
-         };
+         return new CREATED({
+            message: 'Create category_course relationship successfully',
+            metadata: {
+               ...result,
+            },
+         });
       } catch (error) {
-         throw new CustomException(
-            'add categoryCourse failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'Add categoryCourse failed',
+            error: error,
+         });
       }
    }
 
@@ -190,11 +194,11 @@ export class CourseService {
          const foundAccount = await this.findAccountByToken(token);
          //check account
          if (!foundAccount)
-            return {
-               success: false,
-               message: 'cannot found account ',
-               data: {},
-            };
+            return new ErrorResponse({
+               message: 'Cannot found account ',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
 
          const updateResult = await this.entityManager
             .createQueryBuilder()
@@ -206,24 +210,24 @@ export class CourseService {
             .returning('*')
             .execute();
          if (updateResult.affected == 0)
-            return {
-               success: false,
-               message: 'Update course failed ',
-               data: {},
-            };
+            return new ErrorResponse({
+               message: 'Update course failed',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
 
          const updatedCourse = updateResult.raw;
-         return {
-            success: true,
-            message: 'Update course successfully ',
-            data: { updatedCourse },
-         };
+         return new OK({
+            message: 'Update course successfully',
+            metadata: {
+               updateCourse,
+            },
+         });
       } catch (error) {
-         throw new CustomException(
-            'add categoryCourse failed',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            error,
-         );
+         throw new HttpExceptionFilter({
+            message: 'add categoryCourse failed',
+            error: error,
+         });
       }
    }
 
@@ -242,7 +246,10 @@ export class CourseService {
          const account = foundKeyToken.account;
          return account;
       } catch (error) {
-         throw new CustomException('You must login before create new course', 501, {});
+         throw new HttpExceptionFilter({
+            message: 'You must login before create new course',
+            error: error,
+         });
       }
    }
 
@@ -265,7 +272,10 @@ export class CourseService {
          if (foundCourse) return true;
          return false;
       } catch (error) {
-         throw new CustomException(error);
+         throw new HttpExceptionFilter({
+            message: 'Check duplicate title course error',
+            error: error,
+         });
       }
    }
 
