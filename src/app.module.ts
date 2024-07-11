@@ -23,12 +23,6 @@ import { ThrottlerModule } from '@nestjs/throttler';
       }),
       ThrottlerModule.forRoot([
          {
-            name: 'short',
-            ttl: 60,
-            limit: 10,
-         },
-         {
-            name: 'long',
             ttl: 60 * 60,
             limit: 1000,
          },
