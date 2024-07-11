@@ -135,8 +135,16 @@ export class CategoryService {
       }
    }
 
-   public async getListCategory(listCategoryIds: string[]): Promise<CategoryEntity[]> {
+   public async getListCategory(
+      listCategoryIds: string[],
+   ): Promise<CategoryEntity[] | ErrorResponse> {
       try {
+         if (listCategoryIds.length == 0)
+            return new ErrorResponse({
+               message: 'List categories id cannot null',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          let listCategoryEntity: CategoryEntity[] = [];
          await Promise.all(
             listCategoryIds.map(async (id) => {
