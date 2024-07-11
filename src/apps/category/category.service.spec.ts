@@ -54,7 +54,7 @@ describe('Category Service', () => {
             createAt: createAtDate,
             updateAt: updateAtDate,
             createBy: '',
-            isActive: false,
+            isActive: true,
             isArchived: false,
             name: 'font-end',
             description: 'string',
@@ -103,6 +103,61 @@ describe('Category Service', () => {
          }
 
          expect(categoryRepo.findOne).toHaveBeenCalledWith({ where: { id: idCategory } });
+      });
+   });
+
+   describe('findAll', () => {
+      it('should return all categories', async () => {
+         const createAtDate = new Date();
+         const updateAtDate = new Date();
+         const foundCategory: CategoryEntity[] = [
+            {
+               id: '8c648080-5db6-42ad-b42c-6e19741f3dfg',
+               createAt: createAtDate,
+               updateAt: updateAtDate,
+               createBy: '',
+               isActive: false,
+               isArchived: false,
+               name: 'font-end',
+               description: 'string',
+            },
+         ];
+
+         // Giả lập phương thức `find` của `categoryRepo` để trả về `foundCategory`
+         jest.spyOn(categoryRepo, 'find').mockResolvedValue(foundCategory);
+
+         const result = await service.findAll();
+
+         expect(result).toEqual({
+            message: 'Found list category successfully',
+            metadata: { listCategory: foundCategory },
+            statusCode: 200,
+         });
+         expect(categoryRepo.find).toHaveBeenCalledTimes(1);
+      });
+
+      it("should return message 'cannot found any category' ", async () => {
+         jest.spyOn(categoryRepo, 'find').mockResolvedValue([]);
+         const result = await service.findAll();
+         expect(result).toEqual(
+            new ErrorResponse({
+               message: 'Not have any category',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            }),
+         );
+         expect(categoryRepo.find).toHaveBeenCalledTimes(1);
+      });
+
+      it('should throw HttpExceptionFilter if an error occurs', async () => {
+         const err = new Error('Some thing wrong');
+         jest.spyOn(categoryRepo, 'find').mockRejectedValue(err);
+         try {
+            await service.findAll();
+         } catch (error) {
+            expect(error).toBeInstanceOf(HttpExceptionFilter);
+            expect(error.message).toBe('Error find all category');
+         }
       });
    });
 });

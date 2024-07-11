@@ -61,7 +61,7 @@ export class CategoryService {
          });
       } catch (error) {
          throw new HttpExceptionFilter({
-            message: 'Error find all category ',
+            message: 'Error find all category',
             error: error,
          });
       }
