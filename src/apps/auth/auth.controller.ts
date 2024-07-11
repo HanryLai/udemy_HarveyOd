@@ -5,12 +5,14 @@ import { Request, Response } from 'express';
 import { MessageResponse } from 'src/common';
 import { AuthService } from './auth.service';
 import { RegisterDto, ResetPasswordDto, LoginDto, ForgotPasswordDto } from './dtos';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
    constructor(private readonly authService: AuthService) {}
 
+   @Throttle({ default: { limit: 5, ttl: 60000 } })
    @Post('register')
    @ApiOperation({ summary: 'Register a new user' })
    @ApiOkResponse({ description: 'Registration was successful' })
@@ -19,6 +21,7 @@ export class AuthController {
       return await this.authService.register(registerDto);
    }
 
+   @Throttle({ default: { limit: 5, ttl: 60000 } })
    @Post('login')
    @ApiOperation({ summary: 'Log in a user' })
    @ApiOkResponse({ description: 'Login was successful' })
@@ -40,6 +43,7 @@ export class AuthController {
       return await this.authService.verifyAccount(email);
    }
 
+   @Throttle({ default: { limit: 1, ttl: 60000 } })
    @Post('forgot-password')
    @ApiOperation({ summary: 'Forgot password' })
    @ApiOkResponse({ description: 'Forgot password was successful' })
@@ -48,6 +52,7 @@ export class AuthController {
       return await this.authService.forgotPassword(forgotDto);
    }
 
+   @Throttle({ default: { limit: 1, ttl: 60000 } })
    @Put('reset-password')
    @ApiOperation({ summary: 'Reset password' })
    @ApiOkResponse({ description: 'Reset password was successful' })
