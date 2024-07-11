@@ -2,11 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CategoryService } from './category.service';
 import { CategoryRepository } from 'src/repositories/courses';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { CategoryEntity, CourseEntity } from 'src/entities/courses';
+import { CategoryEntity, CertificateEntity, CourseEntity } from 'src/entities/courses';
 import { EntityManager } from 'typeorm';
 import { CourseService } from '../course/course.service';
-import { ErrorResponse, HttpExceptionFilter, OK } from 'src/common';
+import { CREATED, ErrorResponse, HttpExceptionFilter, OK } from 'src/common';
 import { HttpStatus } from '@nestjs/common';
+import { CreateCategoryDto } from './dto';
+import { AccountEntity } from 'src/entities/accounts';
 
 describe('Category Service', () => {
    let service: CategoryService;
@@ -28,7 +30,9 @@ describe('Category Service', () => {
             },
             {
                provide: CourseService,
-               useValue: {},
+               useValue: {
+                  findAccountByToken: jest.fn(), // Đảm bảo phương thức được mock
+               },
             },
          ],
       }).compile();
@@ -157,6 +161,114 @@ describe('Category Service', () => {
          } catch (error) {
             expect(error).toBeInstanceOf(HttpExceptionFilter);
             expect(error.message).toBe('Error find all category');
+         }
+      });
+   });
+
+   describe('create', () => {
+      it('should return error response if account not found', async () => {
+         jest.spyOn(courseService, 'findAccountByToken').mockResolvedValue(null);
+
+         const response = await service.create('tokenInvalid', {
+            name: 'backend',
+            description: 'Description backend categogy',
+         });
+
+         expect(response).toEqual(
+            new ErrorResponse({
+               message: "Don't have permission or don't login before",
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            }),
+         );
+      });
+
+      it('should return error response if category already exists', async () => {
+         const mockCategory: CategoryEntity = {
+            id: '1',
+            name: 'Existing Category',
+            description: 'Some description',
+            createAt: new Date(),
+            updateAt: new Date(),
+            createBy: '',
+            isActive: false,
+            isArchived: false,
+         };
+
+         const mockUser = {
+            username: 'testuser',
+            password: 'password123',
+            email: 'testuser@example.com',
+         } as unknown as AccountEntity;
+
+         jest.spyOn(courseService, 'findAccountByToken').mockResolvedValue(mockUser);
+         jest.spyOn(categoryRepo, 'findOne').mockResolvedValue(mockCategory);
+
+         const response = await service.create('validToken', {
+            name: 'Existing Category',
+         } as CreateCategoryDto);
+
+         expect(response).toEqual(
+            new ErrorResponse({
+               message: 'This name existed, create failed',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: { foundCategory: mockCategory },
+            }),
+         );
+      });
+      it('should create new category successfully', async () => {
+         const mockCategory: CategoryEntity = {
+            id: '1',
+            name: 'Existing Category',
+            description: 'Some description',
+            createAt: new Date(),
+            updateAt: new Date(),
+            createBy: '',
+            isActive: false,
+            isArchived: false,
+         };
+
+         const mockUser = {
+            username: 'testuser',
+            password: 'password123',
+            email: 'testuser@example.com',
+         } as unknown as AccountEntity;
+
+         jest.spyOn(courseService, 'findAccountByToken').mockResolvedValue(mockUser);
+         jest.spyOn(categoryRepo, 'findOne').mockResolvedValue(null);
+         jest.spyOn(categoryRepo, 'save').mockResolvedValue(mockCategory);
+
+         const response = await service.create('validToken', {
+            name: 'New Category',
+         } as CreateCategoryDto);
+
+         expect(response).toEqual(
+            new CREATED({
+               message: 'Create new category successfully',
+               metadata: { result: mockCategory },
+            }),
+         );
+      });
+
+      it('should handle error during category creation', async () => {
+         const mockUser = {
+            username: 'testuser',
+            password: 'password123',
+            email: 'testuser@example.com',
+         } as unknown as AccountEntity;
+         jest.spyOn(courseService, 'findAccountByToken').mockResolvedValue(mockUser);
+         jest.spyOn(categoryRepo, 'findOne').mockResolvedValue(null);
+         jest.spyOn(categoryRepo, 'save').mockRejectedValue(new Error('Database error'));
+
+         try {
+            await service.create('validToken', { name: 'New Category' } as CreateCategoryDto);
+         } catch (error) {
+            expect(error).toEqual(
+               new HttpExceptionFilter({
+                  message: 'Create new category have error',
+                  error: new Error('Database error'),
+               }),
+            );
          }
       });
    });

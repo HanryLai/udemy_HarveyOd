@@ -73,7 +73,7 @@ export class CategoryService {
          const foundAccount = await this.courseService.findAccountByToken(authToken);
          if (!foundAccount)
             return new ErrorResponse({
-               message: "Don't have permisstion or don't login before",
+               message: "Don't have permission or don't login before",
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
