@@ -15,7 +15,7 @@ async function bootstrap() {
    );
 
    app.use(helmet());
-
+   app.useGlobalGuards();
    app.enableCors();
 
    const globalPrefix = 'api';

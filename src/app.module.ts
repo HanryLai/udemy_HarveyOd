@@ -4,6 +4,7 @@ import * as Joi from 'joi';
 import { LoggerMiddleware } from './middlewares/Logger.middleware';
 import { PostgresDatabaseModule } from './common/databases/postgres/data.module';
 import { AuthModule } from './apps/auth/auth.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
    imports: [
@@ -20,12 +21,29 @@ import { AuthModule } from './apps/auth/auth.module';
             abortEarly: true,
          },
       }),
+      ThrottlerModule.forRoot([
+         {
+            name: 'short',
+            ttl: 60,
+            limit: 10,
+         },
+         {
+            name: 'long',
+            ttl: 60 * 60,
+            limit: 1000,
+         },
+      ]),
 
       PostgresDatabaseModule,
       AuthModule,
    ],
    controllers: [],
-   providers: [],
+   providers: [
+      {
+         provide: 'APP_GUARD',
+         useClass: ThrottlerModule,
+      },
+   ],
 })
 export class AppModule implements NestModule {
    configure(consumer: MiddlewareConsumer) {
