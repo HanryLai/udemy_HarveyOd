@@ -5,14 +5,14 @@ import { Request, Response } from 'express';
 import { MessageResponse } from 'src/common';
 import { AuthService } from './auth.service';
 import { RegisterDto, ResetPasswordDto, LoginDto, ForgotPasswordDto } from './dtos';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
    constructor(private readonly authService: AuthService) {}
 
-   @Throttle({ default: { limit: 5, ttl: 60000 } })
+   @Throttle({ default: { limit: 1, ttl: 60000 } })
    @Post('register')
    @ApiOperation({ summary: 'Register a new user' })
    @ApiOkResponse({ description: 'Registration was successful' })
@@ -35,6 +35,7 @@ export class AuthController {
       return res.send(result);
    }
 
+   @SkipThrottle()
    @Put('verify-account')
    @ApiOperation({ summary: 'Verify account' })
    @ApiOkResponse({ description: 'Account verification was successful' })
