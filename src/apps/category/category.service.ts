@@ -48,7 +48,7 @@ export class CategoryService {
    public async findAll(): Promise<MessageResponse> {
       try {
          const listCategory = await this.categoryRepo.find();
-         if (listCategory.length)
+         if (listCategory.length == 0)
             return new ErrorResponse({
                message: 'Not have any category',
                statusCode: HttpStatus.BAD_REQUEST,
