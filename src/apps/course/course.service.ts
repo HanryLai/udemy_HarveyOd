@@ -163,6 +163,7 @@ export class CourseService {
          const listCategoryEntity = await this.categoryService.getListCategory(
             categoryCourse.categoryIds,
          );
+         if (listCategoryEntity instanceof ErrorResponse) return listCategoryEntity;
 
          const result = await this.courseRepo.save({
             ...foundCourse,
