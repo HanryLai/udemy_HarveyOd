@@ -139,26 +139,36 @@ export class CategoryService {
       listCategoryIds: string[],
    ): Promise<CategoryEntity[] | ErrorResponse> {
       try {
-         if (listCategoryIds.length == 0)
+         if (listCategoryIds.length === 0)
             return new ErrorResponse({
                message: 'List categories id cannot null',
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
          let listCategoryEntity: CategoryEntity[] = [];
+         let isError = false;
          await Promise.all(
             listCategoryIds.map(async (id) => {
-               const category = await this.findById(id);
-               if (!category)
-                  return new ErrorResponse({
-                     message: 'Cannot found one element category in list category',
-                     statusCode: HttpStatus.BAD_REQUEST,
-                     metadata: {},
-                  });
+               const messageResponse = await this.findById(id);
+               const category = messageResponse.metadata;
+               console.log(category);
+               if (Object.keys(category).length === 0) {
+                  isError = true;
+                  return null;
+               }
 
-               listCategoryEntity.push(category.metadata);
+               listCategoryEntity.push(category.category);
             }),
          );
+
+         console.log(isError);
+
+         if (isError)
+            return new ErrorResponse({
+               message: 'Cannot found one element category in list category',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          return listCategoryEntity;
       } catch (error) {
          throw new HttpExceptionFilter({
