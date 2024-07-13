@@ -3,18 +3,30 @@ import { CategoryService } from './category.service';
 import { CategoryRepository } from 'src/repositories/courses';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CategoryEntity, CertificateEntity, CourseEntity } from 'src/entities/courses';
-import { EntityManager } from 'typeorm';
+import { createQueryBuilder, EntityManager } from 'typeorm';
 import { CourseService } from '../course/course.service';
-import { CREATED, ErrorResponse, HttpExceptionFilter, OK } from 'src/common';
+import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { HttpStatus } from '@nestjs/common';
-import { CreateCategoryDto } from './dto';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 import { AccountEntity } from 'src/entities/accounts';
 
 describe('Category Service', () => {
    let service: CategoryService;
    let categoryRepo: CategoryRepository;
-   let entityManager: EntityManager;
+   let entityManager: Partial<EntityManager>;
    let courseService: CourseService;
+
+   const entityManagerMock = {
+      createQueryBuilder: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      returning: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue({
+         affected: 1,
+         raw: [{ id: '1', name: 'Updated Category', description: 'Updated description' }],
+      }),
+   };
 
    beforeEach(async () => {
       const module: TestingModule = await Test.createTestingModule({
@@ -26,7 +38,7 @@ describe('Category Service', () => {
             },
             {
                provide: EntityManager,
-               useValue: {},
+               useValue: entityManagerMock,
             },
             {
                provide: CourseService,
@@ -269,6 +281,177 @@ describe('Category Service', () => {
                   error: new Error('Database error'),
                }),
             );
+         }
+      });
+
+      it('should update category successfully', async () => {
+         const id = '1';
+         const updateCategoryDto: UpdateCategoryDto = {
+            name: 'Updated Category',
+            description: 'Updated description',
+         };
+
+         const result = await service.updateCategory(id, updateCategoryDto);
+
+         expect(result).toBeInstanceOf(OK);
+         expect(result.message).toEqual('update category successfully');
+         expect(result.metadata.result.id).toEqual('1');
+         expect(result.metadata.result.name).toEqual('Updated Category');
+         expect(result.metadata.result.description).toEqual('Updated description');
+
+         // Kiểm tra các phương thức đã được gọi với đúng tham số
+         expect(entityManagerMock.createQueryBuilder).toHaveBeenCalled();
+         expect(entityManagerMock.update).toHaveBeenCalled();
+         expect(entityManagerMock.set).toHaveBeenCalledWith({
+            name: updateCategoryDto.name,
+            description: updateCategoryDto.description,
+         });
+         expect(entityManagerMock.where).toHaveBeenCalledWith('id = :id', { id });
+         expect(entityManagerMock.returning).toHaveBeenCalledWith('*');
+         expect(entityManagerMock.execute).toHaveBeenCalled();
+      });
+
+      it('should return error response if no category is updated', async () => {
+         entityManagerMock.execute.mockResolvedValue({ affected: 0 });
+
+         const id = '1';
+         const updateCategoryDto: UpdateCategoryDto = {
+            name: 'Updated Category',
+            description: 'Updated description',
+         };
+
+         const result = await service.updateCategory(id, updateCategoryDto);
+
+         expect(result).toBeInstanceOf(ErrorResponse);
+         expect(result.message).toEqual('update category failed');
+         expect(result.statusCode).toEqual(HttpStatus.BAD_REQUEST);
+         expect(result.metadata).toEqual({});
+
+         // Kiểm tra các phương thức đã được gọi với đúng tham số
+         expect(entityManagerMock.createQueryBuilder).toHaveBeenCalled();
+         expect(entityManagerMock.update).toHaveBeenCalled();
+         expect(entityManagerMock.set).toHaveBeenCalledWith({
+            name: updateCategoryDto.name,
+            description: updateCategoryDto.description,
+         });
+         expect(entityManagerMock.where).toHaveBeenCalledWith('id = :id', { id });
+         expect(entityManagerMock.returning).toHaveBeenCalledWith('*');
+         expect(entityManagerMock.execute).toHaveBeenCalled();
+      });
+
+      it('should throw HttpExceptionFilter if an error occurs during update', async () => {
+         const id = '1';
+         const updateCategoryDto: UpdateCategoryDto = {
+            name: 'Updated Category',
+            description: 'Updated description',
+         };
+
+         entityManagerMock.execute.mockRejectedValue(new Error('Database error'));
+
+         try {
+            await service.updateCategory(id, updateCategoryDto);
+         } catch (error) {
+            expect(error).toBeInstanceOf(HttpExceptionFilter);
+            expect(error.message).toEqual('update category failed');
+            expect(error.error.message).toEqual('Database error');
+         }
+
+         // Kiểm tra các phương thức đã được gọi với đúng tham số
+         expect(entityManagerMock.createQueryBuilder).toHaveBeenCalled();
+         expect(entityManagerMock.update).toHaveBeenCalled();
+         expect(entityManagerMock.set).toHaveBeenCalledWith({
+            name: updateCategoryDto.name,
+            description: updateCategoryDto.description,
+         });
+         expect(entityManagerMock.where).toHaveBeenCalledWith('id = :id', { id });
+         expect(entityManagerMock.returning).toHaveBeenCalledWith('*');
+         expect(entityManagerMock.execute).toHaveBeenCalled();
+      });
+   });
+
+   describe('getListCategories', () => {
+      it('should return list of categories', async () => {
+         jest.spyOn(service, 'findById').mockImplementation(async (id: string) => {
+            if (id === '1') {
+               return new OK({
+                  message: 'Found category',
+                  metadata: {
+                     category: new CategoryEntity({
+                        id: '1',
+                        name: 'Category 1',
+                        description: 'Description of Category 1',
+                        createAt: new Date(),
+                        updateAt: new Date(),
+                        isActive: true,
+                        isArchived: false,
+                        createBy: 'Admin',
+                     }),
+                  },
+               });
+            } else if (id === '2') {
+               return new OK({
+                  message: 'Found category',
+                  metadata: {
+                     category: new CategoryEntity({
+                        id: '2',
+                        name: 'Category 2',
+                        description: 'Description of Category 2',
+                        createAt: new Date(),
+                        updateAt: new Date(),
+                        isActive: true,
+                        isArchived: false,
+                        createBy: 'Admin',
+                     }),
+                  },
+               });
+            } else {
+               return new ErrorResponse({
+                  message: 'Not found',
+                  statusCode: 404,
+                  metadata: {},
+               });
+            }
+         });
+
+         const listCategoryIds = ['1', '2'];
+
+         const result = (await service.getListCategory(listCategoryIds)) as CategoryEntity[];
+         console.log(result);
+         expect(result).toHaveLength(listCategoryIds.length);
+         result.forEach((category, index) => {
+            expect(category.id).toBe(listCategoryIds[index]);
+            expect(category.name).toBe(`Category ${listCategoryIds[index]}`);
+            expect(category.description).toBe(`Description of Category ${listCategoryIds[index]}`);
+         });
+      });
+
+      it('Should return ErrorResponse', async () => {
+         jest
+            .spyOn(service, 'findById')
+            .mockImplementation(async (id: string): Promise<MessageResponse> => {
+               if (id === '2')
+                  return new ErrorResponse({
+                     message: 'Some thing error',
+                     statusCode: 404,
+                     metadata: new Error(),
+                  });
+            });
+         const listCategoryIds = ['2'];
+         const result = (await service.getListCategory(listCategoryIds)) as ErrorResponse;
+         expect(result).toBeInstanceOf(Error);
+      });
+
+      it('Should throw HttpExceptionFilter', async () => {
+         const err = new HttpExceptionFilter({
+            message: 'Get list categories failed',
+            error: new Error(),
+         });
+         jest.spyOn(service, 'getListCategory').mockRejectedValue(err);
+         try {
+            await service.getListCategory(['3']);
+         } catch (err) {
+            expect(err).toBeInstanceOf(HttpExceptionFilter);
+            expect(err.message).toBe('Get list categories failed');
          }
       });
    });
