@@ -43,7 +43,7 @@ describe('Category Service', () => {
             {
                provide: CourseService,
                useValue: {
-                  findAccountByToken: jest.fn(), // Đảm bảo phương thức được mock
+                  findAccountByToken: jest.fn(),
                },
             },
          ],
@@ -139,7 +139,6 @@ describe('Category Service', () => {
             },
          ];
 
-         // Giả lập phương thức `find` của `categoryRepo` để trả về `foundCategory`
          jest.spyOn(categoryRepo, 'find').mockResolvedValue(foundCategory);
 
          const result = await service.findAll();
@@ -283,7 +282,9 @@ describe('Category Service', () => {
             );
          }
       });
+   });
 
+   describe('UpdateCategory', () => {
       it('should update category successfully', async () => {
          const id = '1';
          const updateCategoryDto: UpdateCategoryDto = {
@@ -299,7 +300,6 @@ describe('Category Service', () => {
          expect(result.metadata.result.name).toEqual('Updated Category');
          expect(result.metadata.result.description).toEqual('Updated description');
 
-         // Kiểm tra các phương thức đã được gọi với đúng tham số
          expect(entityManagerMock.createQueryBuilder).toHaveBeenCalled();
          expect(entityManagerMock.update).toHaveBeenCalled();
          expect(entityManagerMock.set).toHaveBeenCalledWith({
@@ -327,7 +327,6 @@ describe('Category Service', () => {
          expect(result.statusCode).toEqual(HttpStatus.BAD_REQUEST);
          expect(result.metadata).toEqual({});
 
-         // Kiểm tra các phương thức đã được gọi với đúng tham số
          expect(entityManagerMock.createQueryBuilder).toHaveBeenCalled();
          expect(entityManagerMock.update).toHaveBeenCalled();
          expect(entityManagerMock.set).toHaveBeenCalledWith({
