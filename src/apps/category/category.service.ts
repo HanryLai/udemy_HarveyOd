@@ -151,7 +151,6 @@ export class CategoryService {
             listCategoryIds.map(async (id) => {
                const messageResponse = await this.findById(id);
                const category = messageResponse.metadata;
-               console.log(category);
                if (Object.keys(category).length === 0) {
                   isError = true;
                   return null;
@@ -161,12 +160,10 @@ export class CategoryService {
             }),
          );
 
-         console.log(isError);
-
          if (isError)
             return new ErrorResponse({
                message: 'Cannot found one element category in list category',
-               statusCode: HttpStatus.BAD_REQUEST,
+               statusCode: HttpStatus.NOT_FOUND,
                metadata: {},
             });
          return listCategoryEntity;

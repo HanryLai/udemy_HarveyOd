@@ -403,19 +403,12 @@ describe('Category Service', () => {
                      }),
                   },
                });
-            } else {
-               return new ErrorResponse({
-                  message: 'Not found',
-                  statusCode: 404,
-                  metadata: {},
-               });
             }
          });
 
          const listCategoryIds = ['1', '2'];
 
          const result = (await service.getListCategory(listCategoryIds)) as CategoryEntity[];
-         console.log(result);
          expect(result).toHaveLength(listCategoryIds.length);
          result.forEach((category, index) => {
             expect(category.id).toBe(listCategoryIds[index]);
@@ -424,7 +417,7 @@ describe('Category Service', () => {
          });
       });
 
-      it('Should return ErrorResponse', async () => {
+      it('Should return ErrorResponse one element cannot found', async () => {
          jest
             .spyOn(service, 'findById')
             .mockImplementation(async (id: string): Promise<MessageResponse> => {
@@ -434,10 +427,37 @@ describe('Category Service', () => {
                      statusCode: 404,
                      metadata: new Error(),
                   });
+               else if (id === '3')
+                  return new OK({
+                     message: 'Found category',
+                     metadata: {
+                        category: new CategoryEntity({
+                           id: '1',
+                           name: 'Category 1',
+                           description: 'Description of Category 1',
+                           createAt: new Date(),
+                           updateAt: new Date(),
+                           isActive: true,
+                           isArchived: false,
+                           createBy: 'Admin',
+                        }),
+                     },
+                  });
             });
-         const listCategoryIds = ['2'];
+         const listCategoryIds = ['2', '3'];
          const result = (await service.getListCategory(listCategoryIds)) as ErrorResponse;
+         console.log(result);
          expect(result).toBeInstanceOf(Error);
+         expect(result.message).toBe('Cannot found one element category in list category');
+         expect(result.statusCode).toBe(404);
+      });
+
+      it('Should return ErrorResponse listcategoryIds cannot null or empty', async () => {
+         const result = (await service.getListCategory([])) as ErrorResponse;
+         console.log(result);
+         expect(result).toBeInstanceOf(Error);
+         expect(result.message).toBe('List categories id cannot null');
+         expect(result.statusCode).toBe(400);
       });
 
       it('Should throw HttpExceptionFilter', async () => {
