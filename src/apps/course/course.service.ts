@@ -34,7 +34,7 @@ export class CourseService {
                message: 'Found course',
                metadata: {
                   course: foundRedis,
-                  category: foundRedis.categories,
+                  category: foundRedis?.categories,
                },
             });
          //find on database
@@ -47,17 +47,19 @@ export class CourseService {
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
-         await this.saveCourseToRedis(foundCourse);
+         // await this.redisService.set('course:' + foundCourse.id, foundCourse, 60 * 30);
+
          return new OK({
             message: 'Found course',
             metadata: {
-               course: foundRedis,
-               category: foundRedis.categories,
+               course: foundCourse,
+               category: foundCourse.categories,
             },
          });
       } catch (error) {
+         console.log(error);
          throw new HttpExceptionFilter({
-            message: 'create new course failed',
+            message: 'find course failed',
             error: error,
          });
       }
@@ -283,9 +285,6 @@ export class CourseService {
    /**
     * Using redis service
     */
-   public async saveCourseToRedis(course: CourseEntity): Promise<void> {
-      await this.redisService.set('course:' + course.id, course, 60 * 30);
-   }
 
    public async getCourseOnRedis(id: string): Promise<CourseEntity> {
       return await this.redisService.get<CourseEntity>('course:' + id);
