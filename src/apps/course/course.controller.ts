@@ -23,7 +23,6 @@ import { CategoryCourseDto } from '../category/dto';
 export class CourseController {
    constructor(private readonly courseService: CourseService) {}
 
-   @HttpCode(HttpStatus.FOUND)
    @Get('/course/:course_id')
    @ApiOperation({ summary: 'Get course by id' })
    @ApiFoundResponse({ description: 'Found this course' })

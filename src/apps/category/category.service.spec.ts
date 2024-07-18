@@ -93,7 +93,10 @@ describe('Category Service', () => {
                },
             }),
          );
-         expect(categoryRepo.findOne).toHaveBeenCalledWith({ where: { id: idCategory } });
+         expect(categoryRepo.findOne).toHaveBeenCalledWith({
+            select: ['id', 'name', 'description'],
+            where: { id: idCategory },
+         });
       });
 
       it('should return error response if category not found', async () => {
@@ -109,7 +112,10 @@ describe('Category Service', () => {
                metadata: {},
             }),
          );
-         expect(categoryRepo.findOne).toHaveBeenCalledWith({ where: { id: idCategory } });
+         expect(categoryRepo.findOne).toHaveBeenCalledWith({
+            select: ['id', 'name', 'description'],
+            where: { id: idCategory },
+         });
       });
 
       it('should throw HttpExceptionFilter if an error occurs', async () => {
@@ -124,7 +130,10 @@ describe('Category Service', () => {
             expect(e.message).toBe('Error find category by id');
          }
 
-         expect(categoryRepo.findOne).toHaveBeenCalledWith({ where: { id: idCategory } });
+         expect(categoryRepo.findOne).toHaveBeenCalledWith({
+            select: ['id', 'name', 'description'],
+            where: { id: idCategory },
+         });
       });
    });
 
@@ -151,7 +160,7 @@ describe('Category Service', () => {
 
          expect(result).toEqual({
             message: 'Found list category successfully',
-            metadata: { listCategory: foundCategory },
+            metadata: foundCategory,
             statusCode: 200,
          });
          expect(categoryRepo.find).toHaveBeenCalledTimes(1);
@@ -302,9 +311,9 @@ describe('Category Service', () => {
 
          expect(result).toBeInstanceOf(OK);
          expect(result.message).toEqual('update category successfully');
-         expect(result.metadata.result.id).toEqual('1');
-         expect(result.metadata.result.name).toEqual('Updated Category');
-         expect(result.metadata.result.description).toEqual('Updated description');
+         expect(result.metadata.id).toEqual('1');
+         expect(result.metadata.name).toEqual('Updated Category');
+         expect(result.metadata.description).toEqual('Updated description');
 
          expect(entityManagerMock.createQueryBuilder).toHaveBeenCalled();
          expect(entityManagerMock.update).toHaveBeenCalled();
@@ -313,7 +322,7 @@ describe('Category Service', () => {
             description: updateCategoryDto.description,
          });
          expect(entityManagerMock.where).toHaveBeenCalledWith('id = :id', { id });
-         expect(entityManagerMock.returning).toHaveBeenCalledWith('*');
+         expect(entityManagerMock.returning).toHaveBeenCalledWith(['id', 'name', 'description']);
          expect(entityManagerMock.execute).toHaveBeenCalled();
       });
 
@@ -340,7 +349,7 @@ describe('Category Service', () => {
             description: updateCategoryDto.description,
          });
          expect(entityManagerMock.where).toHaveBeenCalledWith('id = :id', { id });
-         expect(entityManagerMock.returning).toHaveBeenCalledWith('*');
+         expect(entityManagerMock.returning).toHaveBeenCalledWith(['id', 'name', 'description']);
          expect(entityManagerMock.execute).toHaveBeenCalled();
       });
 
@@ -369,7 +378,7 @@ describe('Category Service', () => {
             description: updateCategoryDto.description,
          });
          expect(entityManagerMock.where).toHaveBeenCalledWith('id = :id', { id });
-         expect(entityManagerMock.returning).toHaveBeenCalledWith('*');
+         expect(entityManagerMock.returning).toHaveBeenCalledWith(['id', 'name', 'description']);
          expect(entityManagerMock.execute).toHaveBeenCalled();
       });
    });

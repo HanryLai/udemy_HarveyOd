@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager } from 'typeorm';
 
 import { CategoryRepository } from 'src/repositories/courses';
-import { CategoryEntity, CourseEntity } from 'src/entities/courses';
+import { CategoryEntity } from 'src/entities/courses';
 import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 
 import { CourseService } from '../course/course.service';
@@ -24,6 +24,7 @@ export class CategoryService {
    public async findById(idCategory: string): Promise<MessageResponse> {
       try {
          const foundCategory = await this.categoryRepo.findOne({
+            select: ['id', 'name', 'description'],
             where: {
                id: idCategory,
             },
@@ -36,9 +37,7 @@ export class CategoryService {
             });
          return new OK({
             message: 'Found category',
-            metadata: {
-               ...foundCategory,
-            },
+            metadata: foundCategory,
          });
       } catch (error) {
          throw new HttpExceptionFilter({ message: 'Error find category by id', error: error });
@@ -47,7 +46,9 @@ export class CategoryService {
 
    public async findAll(): Promise<MessageResponse> {
       try {
-         const listCategory = await this.categoryRepo.find();
+         const listCategory = await this.categoryRepo.find({
+            select: ['id', 'name', 'description'],
+         });
          if (listCategory.length == 0)
             return new ErrorResponse({
                message: 'Not have any category',
@@ -57,7 +58,7 @@ export class CategoryService {
 
          return new OK({
             message: 'Found list category successfully',
-            metadata: { listCategory },
+            metadata: listCategory,
          });
       } catch (error) {
          throw new HttpExceptionFilter({
@@ -112,7 +113,7 @@ export class CategoryService {
                description: category.description,
             })
             .where('id = :id', { id: id })
-            .returning('*')
+            .returning(['id', 'name', 'description'])
             .execute();
 
          if (updateResult.affected == 0)
@@ -125,7 +126,7 @@ export class CategoryService {
          const result = updateResult.raw[0];
          return new OK({
             message: 'update category successfully',
-            metadata: { result },
+            metadata: result,
          });
       } catch (error) {
          throw new HttpExceptionFilter({

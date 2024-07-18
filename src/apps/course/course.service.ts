@@ -28,17 +28,26 @@ export class CourseService {
    public async findCourseById(id: string): Promise<MessageResponse> {
       try {
          //check on redis
-         const foundRedis = await this.getCourseOnRedis(id);
+         const foundRedis = await this.redisService.get<CourseEntity>('course:' + id);
          if (foundRedis)
             return new OK({
                message: 'Found course redis',
-               metadata: {
-                  ...foundRedis,
-               },
+               metadata: foundRedis,
             });
          //find on database
          const foundCourse = await this.courseRepo.findOne({
             where: { id },
+            select: [
+               'id',
+               'title',
+               'description',
+               'language',
+               'price',
+               'discount',
+               'instructor',
+               'level',
+               'thunbnailUrl',
+            ],
          });
          if (!foundCourse)
             return new ErrorResponse({
@@ -46,13 +55,12 @@ export class CourseService {
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
+
          await this.redisService.set('course:' + foundCourse.id, { ...foundCourse }, 60 * 30);
 
          return new OK({
             message: 'Found course',
-            metadata: {
-               ...foundCourse,
-            },
+            metadata: foundCourse,
          });
       } catch (error) {
          throw new HttpExceptionFilter({
@@ -66,6 +74,17 @@ export class CourseService {
       try {
          const limit = 10;
          const listCourse = await this.courseRepo.find({
+            select: [
+               'id',
+               'title',
+               'description',
+               'language',
+               'price',
+               'discount',
+               'instructor',
+               'level',
+               'thunbnailUrl',
+            ],
             skip: limit * (offset - 1),
             take: limit,
          });
@@ -130,11 +149,11 @@ export class CourseService {
                metadata: {},
             });
 
-         const { instructor, ...res } = result;
+         const { instructor, ...course } = result;
          return new CREATED({
             message: 'create course successfully',
             metadata: {
-               ...res,
+               course: course,
                instructor: {
                   id: instructor.id,
                   email: instructor.email,
@@ -175,7 +194,7 @@ export class CourseService {
             categories: listCategoryEntity,
          });
 
-         await this.delCourseOnRedis(foundCourse.id);
+         await this.redisService.delete('course:' + foundCourse.id);
 
          return new CREATED({
             message: 'Create category_course relationship successfully',
@@ -283,17 +302,5 @@ export class CourseService {
             error: error,
          });
       }
-   }
-
-   /**
-    * Using redis service
-    */
-
-   public async getCourseOnRedis(id: string): Promise<CourseEntity> {
-      return await this.redisService.get<CourseEntity>('course:' + id);
-   }
-
-   public async delCourseOnRedis(id: string): Promise<void> {
-      return await this.redisService.delete('course:' + id);
    }
 }
