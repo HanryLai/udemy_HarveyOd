@@ -31,10 +31,9 @@ export class CourseService {
          const foundRedis = await this.getCourseOnRedis(id);
          if (foundRedis)
             return new OK({
-               message: 'Found course',
+               message: 'Found course redis',
                metadata: {
                   course: foundRedis,
-                  category: foundRedis?.categories,
                },
             });
          //find on database
@@ -47,13 +46,12 @@ export class CourseService {
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
-         // await this.redisService.set('course:' + foundCourse.id, foundCourse, 60 * 30);
+         await this.redisService.set('course:' + foundCourse.id, { ...foundCourse }, 60 * 30);
 
          return new OK({
             message: 'Found course',
             metadata: {
                course: foundCourse,
-               category: foundCourse.categories,
             },
          });
       } catch (error) {
