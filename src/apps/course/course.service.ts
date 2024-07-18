@@ -55,7 +55,6 @@ export class CourseService {
             },
          });
       } catch (error) {
-         console.log(error);
          throw new HttpExceptionFilter({
             message: 'find course failed',
             error: error,
@@ -165,8 +164,7 @@ export class CourseService {
                metadata: {},
             });
 
-         const dataFoundCourse = (await this.findCourseById(categoryCourse.courseId)).metadata;
-         const foundCourse: CourseEntity = dataFoundCourse.course;
+         const foundCourse = (await this.findCourseById(categoryCourse.courseId)).metadata;
          const listCategoryEntity = await this.categoryService.getListCategory(
             categoryCourse.categoryIds,
          );

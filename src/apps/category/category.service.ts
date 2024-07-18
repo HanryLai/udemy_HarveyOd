@@ -37,7 +37,7 @@ export class CategoryService {
          return new OK({
             message: 'Found category',
             metadata: {
-               foundCategory,
+               ...foundCategory,
             },
          });
       } catch (error) {
@@ -155,8 +155,7 @@ export class CategoryService {
                   isError = true;
                   return null;
                }
-
-               listCategoryEntity.push(category.category);
+               listCategoryEntity.push(category);
             }),
          );
 
