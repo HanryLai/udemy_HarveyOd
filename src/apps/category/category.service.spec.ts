@@ -89,7 +89,7 @@ describe('Category Service', () => {
             new OK({
                message: 'Found category',
                metadata: {
-                  foundCategory,
+                  ...foundCategory,
                },
             }),
          );
@@ -378,35 +378,37 @@ describe('Category Service', () => {
       it('should return list of categories', async () => {
          jest.spyOn(service, 'findById').mockImplementation(async (id: string) => {
             if (id === '1') {
+               const category = new CategoryEntity({
+                  id: '1',
+                  name: 'Category 1',
+                  description: 'Description of Category 1',
+                  createAt: new Date(),
+                  updateAt: new Date(),
+                  isActive: true,
+                  isArchived: false,
+                  createBy: 'Admin',
+               });
                return new OK({
                   message: 'Found category',
                   metadata: {
-                     category: new CategoryEntity({
-                        id: '1',
-                        name: 'Category 1',
-                        description: 'Description of Category 1',
-                        createAt: new Date(),
-                        updateAt: new Date(),
-                        isActive: true,
-                        isArchived: false,
-                        createBy: 'Admin',
-                     }),
+                     ...category,
                   },
                });
             } else if (id === '2') {
+               const category = new CategoryEntity({
+                  id: '2',
+                  name: 'Category 2',
+                  description: 'Description of Category 2',
+                  createAt: new Date(),
+                  updateAt: new Date(),
+                  isActive: true,
+                  isArchived: false,
+                  createBy: 'Admin',
+               });
                return new OK({
                   message: 'Found category',
                   metadata: {
-                     category: new CategoryEntity({
-                        id: '2',
-                        name: 'Category 2',
-                        description: 'Description of Category 2',
-                        createAt: new Date(),
-                        updateAt: new Date(),
-                        isActive: true,
-                        isArchived: false,
-                        createBy: 'Admin',
-                     }),
+                     ...category,
                   },
                });
             }
@@ -417,6 +419,7 @@ describe('Category Service', () => {
          const result = (await service.getListCategory(listCategoryIds)) as CategoryEntity[];
          expect(result).toHaveLength(listCategoryIds.length);
          result.forEach((category, index) => {
+            console.log('category+' + category.id);
             expect(category.id).toBe(listCategoryIds[index]);
             expect(category.name).toBe(`Category ${listCategoryIds[index]}`);
             expect(category.description).toBe(`Description of Category ${listCategoryIds[index]}`);
@@ -452,7 +455,6 @@ describe('Category Service', () => {
             });
          const listCategoryIds = ['2', '3'];
          const result = (await service.getListCategory(listCategoryIds)) as ErrorResponse;
-         console.log(result);
          expect(result).toBeInstanceOf(Error);
          expect(result.message).toBe('Cannot found one element category in list category');
          expect(result.statusCode).toBe(404);
@@ -460,7 +462,6 @@ describe('Category Service', () => {
 
       it('Should return ErrorResponse listcategoryIds cannot null or empty', async () => {
          const result = (await service.getListCategory([])) as ErrorResponse;
-         console.log(result);
          expect(result).toBeInstanceOf(Error);
          expect(result.message).toBe('List categories id cannot null');
          expect(result.statusCode).toBe(400);
