@@ -33,7 +33,7 @@ export class CourseService {
             return new OK({
                message: 'Found course redis',
                metadata: {
-                  course: foundRedis,
+                  ...foundRedis,
                },
             });
          //find on database
@@ -51,7 +51,7 @@ export class CourseService {
          return new OK({
             message: 'Found course',
             metadata: {
-               course: foundCourse,
+               ...foundCourse,
             },
          });
       } catch (error) {
