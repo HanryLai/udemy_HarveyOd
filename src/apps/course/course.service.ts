@@ -130,10 +130,17 @@ export class CourseService {
                message: 'create course failed',
                metadata: {},
             });
+
+         const { instructor, ...res } = result;
          return new CREATED({
             message: 'create course successfully',
             metadata: {
-               result,
+               ...res,
+               instructor: {
+                  id: instructor.id,
+                  email: instructor.email,
+                  username: instructor.username,
+               },
             },
          });
       } catch (error) {
