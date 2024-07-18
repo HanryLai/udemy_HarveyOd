@@ -21,7 +21,6 @@ import { CreateCourseDto } from '../course/dto';
 export class CategoryController {
    constructor(private readonly categoryService: CategoryService) {}
 
-   @HttpCode(HttpStatus.FOUND)
    @Get('category/:id')
    @ApiOperation({ summary: 'Find category by id category' })
    @ApiFoundResponse({
@@ -32,7 +31,6 @@ export class CategoryController {
       return await this.categoryService.findById(id);
    }
 
-   @HttpCode(HttpStatus.FOUND)
    @Get('')
    @ApiOperation({ summary: 'Find category by id category' })
    @ApiFoundResponse({
@@ -43,7 +41,6 @@ export class CategoryController {
       return await this.categoryService.findAll();
    }
 
-   @HttpCode(HttpStatus.OK)
    @UseInterceptors(RequestInterceptor)
    @UseGuards(ExistToken)
    @Post('/create')
@@ -57,7 +54,6 @@ export class CategoryController {
       return await this.categoryService.create(authToken, category);
    }
 
-   @HttpCode(HttpStatus.OK)
    @Put('category/:id')
    @ApiOperation({ summary: 'Find category by id category' })
    @ApiFoundResponse({
