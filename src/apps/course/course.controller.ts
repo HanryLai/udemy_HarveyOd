@@ -31,14 +31,11 @@ export class CourseController {
       return await this.courseService.findCourseById(id);
    }
 
-   @HttpCode(HttpStatus.FOUND)
    @Get('')
-   @ApiOperation({ summary: 'Get course by id' })
-   @ApiFoundResponse({ description: 'Found this course' })
+   @ApiOperation({ summary: 'Get courses' })
+   @ApiFoundResponse({ description: 'Found  courses' })
    @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
-   public async getCourseByOffSet(
-      @Query('offset', ParseIntPipe) offset: number,
-   ): Promise<MessageResponse> {
+   public async getCourseByOffSet(@Query('page') offset: number): Promise<MessageResponse> {
       return await this.courseService.findByOffSet(offset);
    }
 

@@ -152,7 +152,10 @@ describe('Category Service', () => {
       it('should return all categories', async () => {
          const createAtDate = new Date();
          const updateAtDate = new Date();
-         const foundCategory: CategoryEntity[] = [
+         const offset = 1;
+         const limitQuantity = 10;
+         const totalCategory = 1;
+         const foundCategories: CategoryEntity[] = [
             {
                id: '8c648080-5db6-42ad-b42c-6e19741f3dfg',
                createAt: createAtDate,
@@ -165,22 +168,39 @@ describe('Category Service', () => {
             },
          ];
 
-         jest.spyOn(categoryRepo, 'find').mockResolvedValue(foundCategory);
-
-         const result = await service.findAll();
-
-         expect(result).toEqual({
-            message: 'Found list category successfully',
-            metadata: foundCategory,
-            statusCode: 200,
+         const listCategoriesField = foundCategories.map((cate) => {
+            return {
+               id: cate.id,
+               name: cate.name,
+               description: cate.description,
+            } as CategoryEntity;
          });
+
+         jest.spyOn(categoryRepo, 'find').mockResolvedValue(listCategoriesField);
+         jest.spyOn(categoryRepo, 'count').mockResolvedValue(totalCategory);
+         const result = await service.findAll(offset);
+         const expectResponse = new OK({
+            message: 'Found list category successfully',
+            metadata: {
+               categories: listCategoriesField,
+               offset: offset,
+               limit: limitQuantity,
+               totalPage: Math.ceil(totalCategory / limitQuantity),
+               totalCourseOfPage: listCategoriesField.length,
+            },
+         });
+         expect(result.message).toBe('Found list category successfully');
+         expect(result.statusCode).toBe(200);
+         expect(result).toStrictEqual(expectResponse);
          expect(categoryRepo.find).toHaveBeenCalledTimes(1);
       });
 
       it("should return message 'cannot found any category' ", async () => {
          jest.spyOn(categoryRepo, 'find').mockResolvedValue([]);
-         const result = await service.findAll();
-         expect(result).toEqual(
+         jest.spyOn(categoryRepo, 'count').mockResolvedValue(0);
+         const result = await service.findAll(1);
+         console.log(result);
+         expect(result).toStrictEqual(
             new ErrorResponse({
                message: 'Not have any category',
                statusCode: HttpStatus.BAD_REQUEST,
@@ -194,7 +214,7 @@ describe('Category Service', () => {
          const err = new Error('Some thing wrong');
          jest.spyOn(categoryRepo, 'find').mockRejectedValue(err);
          try {
-            await service.findAll();
+            await service.findAll(3);
          } catch (error) {
             expect(error).toBeInstanceOf(HttpExceptionFilter);
             expect(error.message).toBe('Error find all category');

@@ -50,11 +50,17 @@ export class CategoryService {
       }
    }
 
-   public async findAll(): Promise<MessageResponse> {
+   public async findAll(offset): Promise<MessageResponse> {
       try {
+         if (offset < 1) offset = 1;
+         const limit = 10;
          const listCategory = await this.categoryRepo.find({
             select: ['id', 'name', 'description'],
+            skip: limit * (offset - 1),
+            take: limit,
          });
+         const totalCategory = (await this.categoryRepo.count()) / limit;
+
          if (listCategory.length == 0)
             return new ErrorResponse({
                message: 'Not have any category',
@@ -64,7 +70,13 @@ export class CategoryService {
 
          return new OK({
             message: 'Found list category successfully',
-            metadata: listCategory,
+            metadata: {
+               categories: listCategory,
+               offset: offset,
+               limit: limit,
+               totalPage: Math.ceil(totalCategory),
+               totalCourseOfPage: listCategory.length,
+            },
          });
       } catch (error) {
          throw new HttpExceptionFilter({

@@ -72,6 +72,7 @@ export class CourseService {
 
    public async findByOffSet(offset: number): Promise<MessageResponse> {
       try {
+         if (offset < 1) offset = 1;
          const limit = 10;
          const listCourse = await this.courseRepo.find({
             select: [
@@ -88,9 +89,12 @@ export class CourseService {
             skip: limit * (offset - 1),
             take: limit,
          });
-         if (!listCourse)
+
+         const totalCourse = (await this.courseRepo.count()) / limit;
+
+         if (listCourse.length === 0)
             return new ErrorResponse({
-               message: 'not have any courses',
+               message: 'Not have any courses',
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
@@ -101,6 +105,8 @@ export class CourseService {
                courses: listCourse,
                offset: offset,
                limit: limit,
+               totalPage: Math.ceil(totalCourse),
+               totalCourseOfPage: listCourse.length,
             },
          });
       } catch (error) {

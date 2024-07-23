@@ -9,6 +9,7 @@ import {
    UseGuards,
    UseInterceptors,
    Put,
+   Query,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto, CategoryCourseDto } from './dto';
@@ -37,8 +38,8 @@ export class CategoryController {
       description: 'Find category by id category successfully',
    })
    @ApiBody({ type: CreateCategoryDto, description: 'About scheme category' })
-   public async findAll(): Promise<MessageResponse> {
-      return await this.categoryService.findAll();
+   public async findAll(@Query('page') page: number): Promise<MessageResponse> {
+      return await this.categoryService.findAll(page);
    }
 
    @UseInterceptors(RequestInterceptor)
