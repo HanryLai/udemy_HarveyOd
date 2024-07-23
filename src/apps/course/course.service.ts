@@ -27,6 +27,12 @@ export class CourseService {
 
    public async findCourseById(id: string): Promise<MessageResponse> {
       try {
+         if (!id.trim())
+            return new ErrorResponse({
+               message: 'Id course not valid',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          //check on redis
          const foundRedis = await this.redisService.get<CourseEntity>('course:' + id);
          if (foundRedis)
