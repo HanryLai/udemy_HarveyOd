@@ -65,6 +65,17 @@ describe('Category Service', () => {
    });
 
    describe('findById', () => {
+      it('Should return id category not valid', async () => {
+         const result = await service.findById('   ');
+         expect(result).toEqual(
+            new ErrorResponse({
+               message: 'Id not valid',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            }),
+         );
+      });
+
       it('should return category if found', async () => {
          const idCategory = '8c648080-5db6-42ad-b42c-6e19741f3dff';
          const createAtString = '2024-07-06T04:59:18.465Z';
@@ -271,7 +282,7 @@ describe('Category Service', () => {
          expect(response).toEqual(
             new CREATED({
                message: 'Create new category successfully',
-               metadata: { result: mockCategory },
+               metadata: mockCategory,
             }),
          );
       });
