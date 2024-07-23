@@ -8,7 +8,7 @@ import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from
 
 import { CourseService } from '../course/course.service';
 
-import { CategoryCourseDto, UpdateCategoryDto, CreateCategoryDto } from './dto';
+import { UpdateCategoryDto, CreateCategoryDto } from './dto';
 
 @Injectable()
 export class CategoryService {
@@ -23,6 +23,12 @@ export class CategoryService {
 
    public async findById(idCategory: string): Promise<MessageResponse> {
       try {
+         if (!idCategory.trim())
+            return new ErrorResponse({
+               message: 'Id not valid',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
          const foundCategory = await this.categoryRepo.findOne({
             select: ['id', 'name', 'description'],
             where: {
@@ -70,7 +76,6 @@ export class CategoryService {
 
    public async create(authToken: string, category: CreateCategoryDto): Promise<MessageResponse> {
       try {
-         // const foundAccount = 1;
          const foundAccount = await this.courseService.findAccountByToken(authToken);
          if (!foundAccount)
             return new ErrorResponse({
@@ -88,12 +93,12 @@ export class CategoryService {
             return new ErrorResponse({
                message: 'This name existed, create failed',
                statusCode: HttpStatus.BAD_REQUEST,
-               metadata: { foundCategory },
+               metadata: foundCategory,
             });
          const result = await this.categoryRepo.save(category);
          return new CREATED({
             message: 'Create new category successfully',
-            metadata: { result },
+            metadata: result,
          });
       } catch (error) {
          throw new HttpExceptionFilter({
