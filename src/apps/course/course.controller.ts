@@ -41,7 +41,6 @@ export class CourseController {
 
    @UseInterceptors(RequestInterceptor)
    @UseGuards(ExistToken)
-   @HttpCode(HttpStatus.OK)
    @Post('create')
    @ApiOperation({ summary: 'Create new course' })
    @ApiOkResponse({ description: 'Create new course successfully' })
@@ -58,7 +57,6 @@ export class CourseController {
 
    @UseInterceptors(RequestInterceptor)
    @UseGuards(ExistToken)
-   @HttpCode(HttpStatus.OK)
    @Put('course/categories')
    @ApiOperation({ summary: 'Create new course category relationship' })
    @ApiOkResponse({ description: 'Create new course category relationship successfully' })
@@ -75,7 +73,6 @@ export class CourseController {
 
    @UseInterceptors(RequestInterceptor)
    @UseGuards(ExistToken)
-   @HttpCode(HttpStatus.OK)
    @Put('course/update/:id')
    @ApiOperation({ summary: 'Update course' })
    @ApiOkResponse({ description: 'Update course successfully' })
