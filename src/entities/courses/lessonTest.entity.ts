@@ -1,9 +1,9 @@
-import { Column, Entity, Index, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from '../bases';
 import { ILessonTestEntity } from '../interfaces';
 import { CourseLessonEntity } from './lesson.entity';
 
-@Entity({ name: 'lession_test' })
+@Entity({ name: 'lesson_test' })
 export class LessonTestEntity extends BaseEntity<LessonTestEntity> implements ILessonTestEntity {
    @Column({ type: 'varchar', name: 'question_text' })
    questionText: string;
@@ -16,6 +16,6 @@ export class LessonTestEntity extends BaseEntity<LessonTestEntity> implements IL
    @Column({ type: 'varchar', name: 'url_audio' })
    urlAudio: string;
 
-   @ManyToOne(() => CourseLessonEntity, (lesson) => lesson.lessonTest)
+   @OneToMany(() => CourseLessonEntity, (lesson) => lesson.lessonTest)
    lessons: CourseLessonEntity[];
 }
