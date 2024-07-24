@@ -18,8 +18,9 @@ import {
    TagEntity,
    TypeUploadEntity,
    LessionTestEntity,
+   InteractionEntity,
 } from './courses';
-import { InteractionEntity } from './courses/interaction.entity';
+
 
 export const entities = [
    AccountEntity,
