@@ -2,6 +2,7 @@ import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../bases';
 import { ILesson } from '../interfaces';
 import { CourseModuleEntity } from './module.entity';
+import { LessonTestEntity } from './lessonTest.entity';
 
 @Entity({ name: 'course_lesson' })
 export class CourseLessonEntity extends BaseEntity<CourseLessonEntity> implements ILesson {
@@ -23,4 +24,7 @@ export class CourseLessonEntity extends BaseEntity<CourseLessonEntity> implement
 
    @ManyToOne(() => CourseModuleEntity, (module) => module.lessions)
    module: CourseModuleEntity;
+
+   @ManyToOne(() => LessonTestEntity, (lessonTest) => lessonTest.lessons)
+   lessonTest: LessonTestEntity;
 }

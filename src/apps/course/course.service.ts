@@ -78,7 +78,7 @@ export class CourseService {
 
    public async findByOffSet(offset: number): Promise<MessageResponse> {
       try {
-         if (offset < 1) offset = 1;
+         if (offset < 1 || !offset) offset = 1;
          const limit = 10;
          const listCourse = await this.courseRepo.find({
             select: [
@@ -256,9 +256,7 @@ export class CourseService {
          const updatedCourse = updateResult.raw;
          return new OK({
             message: 'Update course successfully',
-            metadata: {
-               updateCourse,
-            },
+            metadata: updatedCourse,
          });
       } catch (error) {
          throw new HttpExceptionFilter({

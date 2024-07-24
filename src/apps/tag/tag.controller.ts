@@ -8,11 +8,12 @@ import {
    Delete,
    UseGuards,
    UseInterceptors,
+   Query,
 } from '@nestjs/common';
 import { TagService } from './tag.service';
 import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ExistToken, MessageResponse, RequestInterceptor, TokenCurrent } from 'src/common';
-import { CreateTagDto } from './dto';
+import { CreateTagDto, UpdateTagDto } from './dto';
 
 @ApiTags('Tag')
 @Controller('tags')
@@ -24,6 +25,7 @@ export class TagController {
    @ApiFoundResponse({
       description: 'Find tag by id tag successfully',
    })
+   @ApiBody({ type: CreateTagDto, description: 'About schema tag' })
    public async findById(@Param('id') id: string): Promise<MessageResponse> {
       return await this.tagService.findById(id);
    }
@@ -33,8 +35,9 @@ export class TagController {
    @ApiFoundResponse({
       description: 'Find list tags successfully',
    })
-   public async findAll(): Promise<MessageResponse> {
-      return await this.tagService.findAll();
+   @ApiBody({ type: CreateTagDto, description: 'About schema tag' })
+   public async findAll(@Query('page') page: number): Promise<MessageResponse> {
+      return await this.tagService.findAll(page);
    }
 
    @UseInterceptors(RequestInterceptor)
@@ -48,5 +51,19 @@ export class TagController {
       @TokenCurrent() authToken: string,
    ): Promise<MessageResponse> {
       return await this.tagService.create(authToken, tag);
+   }
+
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
+   @Post('/update/:id')
+   @ApiOperation({ summary: 'Update tag' })
+   @ApiOkResponse({ description: 'Update tag successfully' })
+   @ApiBody({ type: UpdateTagDto, description: 'About schema tag' })
+   public async update(
+      @Body() tag: UpdateTagDto,
+      @TokenCurrent() authToken: string,
+      @Param('id') id: string,
+   ): Promise<MessageResponse> {
+      return await this.tagService.update(authToken, tag, id);
    }
 }
