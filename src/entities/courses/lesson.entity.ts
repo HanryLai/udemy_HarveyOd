@@ -3,6 +3,7 @@ import { BaseEntity } from '../bases';
 import { ILesson } from '../interfaces';
 import { CourseModuleEntity } from './module.entity';
 import { LessonTestEntity } from './lessonTest.entity';
+import { TypeUploadEntity } from './typeUpload.entity';
 
 @Entity({ name: 'course_lesson' })
 export class CourseLessonEntity extends BaseEntity<CourseLessonEntity> implements ILesson {
@@ -22,9 +23,12 @@ export class CourseLessonEntity extends BaseEntity<CourseLessonEntity> implement
    @Column({ type: 'int', name: 'lession_order_index' })
    orderIndex: number;
 
-   @ManyToOne(() => CourseModuleEntity, (module) => module.lessions)
+   @ManyToOne(() => CourseModuleEntity, (module) => module.lessons)
    module: CourseModuleEntity;
 
    @ManyToOne(() => LessonTestEntity, (lessonTest) => lessonTest.lessons)
    lessonTest: LessonTestEntity;
+
+   @ManyToOne(() => TypeUploadEntity, (typeUpdate) => typeUpdate.lessons)
+   typeUpload: TypeUploadEntity;
 }
