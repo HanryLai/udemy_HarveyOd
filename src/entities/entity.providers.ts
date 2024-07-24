@@ -16,6 +16,8 @@ import {
    SubmissionEntity,
    CouponEntity,
    TagEntity,
+   LessonTestEntity,
+   TypeUploadEntity,
 } from './courses';
 import { InteractionEntity } from './courses/interaction.entity';
 
@@ -42,4 +44,6 @@ export const entities = [
    CouponEntity,
    TagEntity,
    InteractionEntity,
+   LessonTestEntity,
+   TypeUploadEntity,
 ];
