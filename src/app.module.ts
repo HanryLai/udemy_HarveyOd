@@ -1,10 +1,11 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
-import { LoggerMiddleware } from './middlewares/Logger.middleware';
-import { PostgresDatabaseModule } from './common/databases/postgres/data.module';
+import { LoggerMiddleware } from './middlewares';
+import { PostgresDatabaseModule } from './common';
 import { AuthModule } from './apps/auth/auth.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { QueueModule } from './common/queue/queue.module';
 
 @Module({
    imports: [
@@ -29,7 +30,9 @@ import { ThrottlerModule } from '@nestjs/throttler';
       ]),
 
       PostgresDatabaseModule,
+      QueueModule,
       AuthModule,
+
    ],
    controllers: [],
    providers: [
