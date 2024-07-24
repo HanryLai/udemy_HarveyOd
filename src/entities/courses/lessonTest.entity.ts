@@ -17,5 +17,5 @@ export class LessonTestEntity extends BaseEntity<LessonTestEntity> implements IL
    urlAudio: string;
 
    @ManyToOne(() => CourseLessonEntity, (lesson) => lesson.lessonTest)
-   lessons: CourseLessonEntity;
+   lessons: CourseLessonEntity[];
 }
