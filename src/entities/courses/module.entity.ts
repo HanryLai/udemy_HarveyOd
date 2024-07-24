@@ -24,6 +24,6 @@ export class CourseModuleEntity extends BaseEntity<CourseModuleEntity> implement
    @ManyToOne(() => CourseEntity, (course) => course.modules)
    course: CourseEntity;
 
-   @OneToMany(() => CourseLessonEntity, (lession) => lession.module)
-   lessions: CourseLessonEntity[];
+   @OneToMany(() => CourseLessonEntity, (lesson) => lesson.module)
+   lessons: CourseLessonEntity[];
 }
