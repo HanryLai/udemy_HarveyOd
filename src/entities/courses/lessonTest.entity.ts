@@ -5,7 +5,6 @@ import { CourseLessonEntity } from './lesson.entity';
 
 @Entity({ name: 'lession_test' })
 export class LessonTestEntity extends BaseEntity<LessonTestEntity> implements ILessonTestEntity {
-   @Index('IDX_LESSON_TEST')
    @Column({ type: 'varchar', name: 'question_text' })
    questionText: string;
 
