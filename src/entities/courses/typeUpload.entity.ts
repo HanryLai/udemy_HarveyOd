@@ -16,4 +16,5 @@ export class TypeUploadEntity extends BaseEntity<TypeUploadEntity> implements IT
    @Column({ name: 'duration', type: 'int', default: 0 })
    duration: number;
 
+
 }
