@@ -1,6 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '../bases';
 import { ILessionTest } from '../interfaces';
+import { CourseLessonEntity } from './lesson.entity';
 
 @Entity({ name: 'lession_tests' })
 export class LessionTestEntity extends BaseEntity<LessionTestEntity> implements ILessionTest {
@@ -15,4 +16,7 @@ export class LessionTestEntity extends BaseEntity<LessionTestEntity> implements 
 
    @Column({ name: 'url_audio', type: 'text', default: '' })
    urlAudio: string;
+
+   @OneToMany(() => CourseLessonEntity, (lesson) => lesson.lessonTest)
+   lessons: CourseLessonEntity[];
 }
