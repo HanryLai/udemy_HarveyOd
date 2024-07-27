@@ -1,7 +1,7 @@
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity } from 'typeorm';
 import { BaseEntity } from '../bases';
 import { ITypeUpload } from '../interfaces';
-import { CourseLessonEntity } from './lesson.entity';
+
 
 @Entity({ name: 'type_uploads' })
 export class TypeUploadEntity extends BaseEntity<TypeUploadEntity> implements ITypeUpload {
@@ -16,9 +16,6 @@ export class TypeUploadEntity extends BaseEntity<TypeUploadEntity> implements IT
 
    @Column({ name: 'duration', type: 'int', default: 0 })
    duration: number;
-
-   @OneToMany(() => CourseLessonEntity, (lesson) => lesson.typeUpload)
-   lesson: CourseLessonEntity[];
 
 
 }
