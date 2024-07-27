@@ -6,6 +6,7 @@ import { PostgresDatabaseModule } from './common';
 import { AuthModule } from './apps/auth/auth.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { QueueModule } from './common/queue/queue.module';
+import { LoggersModule } from './loggers/loggers.module';
 
 @Module({
    imports: [
@@ -32,7 +33,7 @@ import { QueueModule } from './common/queue/queue.module';
       PostgresDatabaseModule,
       QueueModule,
       AuthModule,
-
+      LoggersModule,
    ],
    controllers: [],
    providers: [
