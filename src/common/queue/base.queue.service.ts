@@ -1,7 +1,7 @@
 import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Job, JobOptions, Queue, QueueOptions } from 'bull';
-
 import { EventEmitter } from 'events';
+
 
 export abstract class BaseQueueService<T = any> implements OnModuleInit, OnModuleDestroy {
    protected readonly logger: Logger;
@@ -55,12 +55,12 @@ export abstract class BaseQueueService<T = any> implements OnModuleInit, OnModul
 
    protected handleCompleted(job: Job, result: any) {
       this.logger.log(`Job ${job.id} has been completed in queue ${this.queue.name}`);
-      this.eventEmitter.emit('completed', job, result);
+      // this.eventEmitter.emit('completed', job, result);
    }
 
    protected handleFailed(job: Job, err: Error) {
       this.logger.error(`Job ${job.id} has failed in queue ${this.queue.name}`, err.stack);
-      this.eventEmitter.emit('failed', job, err);
+      // this.eventEmitter.emit('failed', job, err);
    }
 
    protected handleStalled(job: Job) {
@@ -129,11 +129,11 @@ export abstract class BaseQueueService<T = any> implements OnModuleInit, OnModul
    }
 
    onJobCompleted(callback: (job: Job<T>, result: any) => void): void {
-      this.eventEmitter.on('completed', callback);
+      // this.eventEmitter.on('completed', callback);
    }
 
    onJobFailed(callback: (job: Job<T>, error: Error) => void): void {
-      this.eventEmitter.on('failed', callback);
+      // this.eventEmitter.on('failed', callback);
    }
 
 }
