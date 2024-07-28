@@ -16,7 +16,7 @@ import { CourseService } from './course.service';
 import { CreateCourseDto, UpdateCourseDto } from './dto/';
 import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TokenCurrent, RequestInterceptor, ExistToken, MessageResponse } from 'src/common';
-import { CategoryCourseDto } from '../category/dto';
+import { CategoryCourseDto, CreateCategoryDto } from '../category/dto';
 
 @ApiTags('Courses')
 @Controller('courses')
@@ -29,6 +29,14 @@ export class CourseController {
    @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
    public async getCourseById(@Param('course_id') id: string): Promise<MessageResponse> {
       return await this.courseService.findCourseById(id);
+   }
+
+   @Get('/categories/:course_id')
+   @ApiOperation({ summary: 'Get list categories of course' })
+   @ApiFoundResponse({ description: 'Found list categories' })
+   @ApiBody({ type: CreateCategoryDto, description: 'About information of category' })
+   public async getCategoryOfCourse(@Param('course_id') id: string): Promise<MessageResponse> {
+      return await this.courseService.findCategoryOfCourse(id);
    }
 
    @Get('')

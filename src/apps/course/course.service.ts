@@ -76,6 +76,43 @@ export class CourseService {
       }
    }
 
+   public async findCategoryOfCourse(idCourse: string): Promise<MessageResponse> {
+      try {
+         const courseCategory = await this.courseRepo.findOne({
+            where: {
+               id: idCourse,
+            },
+            relations: {
+               categories: true,
+            },
+            select: ['categories', 'id'],
+         });
+         if (courseCategory === null) {
+            return new ErrorResponse({
+               message: 'This course not exist',
+               metadata: {},
+               statusCode: 404,
+            });
+         }
+         if (courseCategory.categories.length === 0) {
+            return new ErrorResponse({
+               message: 'Not exist any category',
+               metadata: {},
+               statusCode: 404,
+            });
+         }
+         return new OK({
+            message: 'Found category by course successfully',
+            metadata: courseCategory,
+         });
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Find category by course id failed',
+            error: error,
+         });
+      }
+   }
+
    public async findByOffSet(offset: number): Promise<MessageResponse> {
       try {
          if (offset < 1 || !offset) offset = 1;
@@ -151,8 +188,8 @@ export class CourseService {
                ...createCourseDto,
                instructor: foundAccount,
             });
-            entityManager.save(newCourse);
-            return newCourse;
+            const resultSave = entityManager.save(newCourse);
+            return resultSave;
          });
 
          if (result === null)
