@@ -16,8 +16,8 @@
       "noImplicitAny": false,
       "strictBindCallApply": false,
       "forceConsistentCasingInFileNames": false,
-      "noFallthroughCasesInSwitch": false,
-      "noUnusedLocals": true
+      "noFallthroughCasesInSwitch": false
+      // "noUnusedLocals": true
    },
    "include": ["src"]
 }
