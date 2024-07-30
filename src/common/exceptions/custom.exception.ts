@@ -18,7 +18,7 @@ export class ErrorResponse extends Error {
       this.logger.log(this.message, this.metadata);
       Object.keys(headers).forEach((key) => {
          res.header(key, headers[key]);
-      });
+      });   
       return res.status(this.statusCode).json(this);
    }
 }
