@@ -1,19 +1,19 @@
 import {
-   Controller,
-   Post,
    Body,
-   UseGuards,
-   UseInterceptors,
+   Controller,
    Get,
    Param,
-   Query,
+   Post,
    Put,
+   Query,
+   UseGuards,
+   UseInterceptors,
 } from '@nestjs/common';
+import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ExistToken, MessageResponse, RequestInterceptor, TokenCurrent } from 'src/common';
+import { CategoryCourseDto, CreateCategoryDto } from '../category/dto';
 import { CourseService } from './course.service';
 import { CreateCourseDto, UpdateCourseDto } from './dto/';
-import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { TokenCurrent, RequestInterceptor, ExistToken, MessageResponse } from 'src/common';
-import { CategoryCourseDto, CreateCategoryDto } from '../category/dto';
 
 @ApiTags('Courses')
 @Controller('courses')

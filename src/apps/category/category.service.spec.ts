@@ -1,15 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CategoryService } from './category.service';
-import { CategoryRepository } from 'src/repositories/courses';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { CategoryEntity, CertificateEntity, CourseEntity } from 'src/entities/courses';
-import { createQueryBuilder, EntityManager } from 'typeorm';
-import { CourseService } from '../course/course.service';
-import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { HttpStatus } from '@nestjs/common';
-import { CreateCategoryDto, UpdateCategoryDto } from './dto';
-import { AccountEntity } from 'src/entities/accounts';
+import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { RedisService } from 'src/common/redis/redis.service';
+import { AccountEntity } from 'src/entities/accounts';
+import { CategoryEntity } from 'src/entities/courses';
+import { CategoryRepository } from 'src/repositories/courses';
+import { EntityManager } from 'typeorm';
+import { CourseService } from '../course/course.service';
+import { CategoryService } from './category.service';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
 describe('Category Service', () => {
    let service: CategoryService;
