@@ -4,12 +4,11 @@ import {
    Post,
    Body,
    Param,
-   HttpStatus,
-   HttpCode,
    UseGuards,
    UseInterceptors,
    Put,
    Query,
+   Delete,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto, CategoryCourseDto } from './dto';
@@ -66,5 +65,23 @@ export class CategoryController {
       @Param('id') id: string,
    ): Promise<MessageResponse> {
       return await this.categoryService.updateCategory(id, category);
+   }
+
+   @Delete('category/:id')
+   @ApiOperation({ summary: 'Delete category by id' })
+   @ApiOkResponse({
+      description: 'Delete category by id successfully',
+      schema: {
+         type: 'object',
+         properties: {
+            affected: {
+               type: 'number',
+               example: 1,
+            },
+         },
+      },
+   })
+   public async delete(@Param('id') id: string): Promise<MessageResponse> {
+      return await this.categoryService.deleteCategory(id);
    }
 }

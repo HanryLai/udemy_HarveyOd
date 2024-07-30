@@ -153,6 +153,22 @@ export class CategoryService {
       }
    }
 
+   public async deleteCategory(id: string): Promise<MessageResponse> {
+      try {
+         const result = await this.categoryRepo.delete({ id });
+         console.log(result);
+         return new OK({
+            message: 'delete category successfully',
+            metadata: result,
+         });
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'delete category failed',
+            error: error,
+         });
+      }
+   }
+
    public async getListCategory(
       listCategoryIds: string[],
    ): Promise<CategoryEntity[] | ErrorResponse> {
