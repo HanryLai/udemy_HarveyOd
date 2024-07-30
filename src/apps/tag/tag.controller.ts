@@ -66,4 +66,12 @@ export class TagController {
    ): Promise<MessageResponse> {
       return await this.tagService.update(authToken, tag, id);
    }
+
+   @Delete('/delete/:id')
+   @ApiOperation({ summary: 'Delete tag' })
+   @ApiOkResponse({ description: 'Delete tag successfully' })
+   @ApiBody({ type: UpdateTagDto, description: 'About schema tag' })
+   public async delete(@Param('id') id: string): Promise<MessageResponse> {
+      return await this.tagService.delete(id);
+   }
 }

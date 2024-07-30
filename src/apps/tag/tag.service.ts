@@ -122,13 +122,6 @@ export class TagService {
       idTag: string,
    ): Promise<MessageResponse> {
       try {
-         const foundAccount = await this.courseService.findAccountByToken(authToken);
-         if (!foundAccount)
-            return new ErrorResponse({
-               message: "Don't have permission or don't login before",
-               statusCode: HttpStatus.BAD_REQUEST,
-               metadata: {},
-            });
          const result = await this.entityManager
             .createQueryBuilder()
             .update(TagEntity)
@@ -146,12 +139,33 @@ export class TagService {
             });
          const updatedTag = result.raw;
          return new OK({
-            message: 'Update category successfully',
+            message: 'Update tag successfully',
             metadata: updatedTag,
          });
       } catch (error) {
          throw new HttpExceptionFilter({
-            message: 'Update category have error',
+            message: 'Update tag have error',
+            error: error,
+         });
+      }
+   }
+
+   public async delete(id: string): Promise<MessageResponse> {
+      try {
+         const result = await this.tagRepo.delete({ id });
+         if (!result.affected)
+            return new ErrorResponse({
+               message: 'Not found this tag',
+               statusCode: 404,
+               metadata: {},
+            });
+         return new OK({
+            message: 'Delete this tag successfully',
+            metadata: 'Effective ' + result.affected,
+         });
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Delete tag have error',
             error: error,
          });
       }
