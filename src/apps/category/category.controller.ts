@@ -11,7 +11,7 @@ import {
    Delete,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
-import { CreateCategoryDto, UpdateCategoryDto, CategoryCourseDto } from './dto';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse, RequestInterceptor, ExistToken, TokenCurrent } from 'src/common';
 import { CreateCourseDto } from '../course/dto';

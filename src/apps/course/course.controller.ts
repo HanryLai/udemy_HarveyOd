@@ -2,14 +2,11 @@ import {
    Controller,
    Post,
    Body,
-   HttpCode,
-   HttpStatus,
    UseGuards,
    UseInterceptors,
    Get,
    Param,
    Query,
-   ParseIntPipe,
    Put,
 } from '@nestjs/common';
 import { CourseService } from './course.service';
