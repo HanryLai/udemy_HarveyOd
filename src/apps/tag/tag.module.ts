@@ -2,10 +2,8 @@ import { Module } from '@nestjs/common';
 import { TagService } from './tag.service';
 import { TagController } from './tag.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CategoryEntity, CourseEntity, TagEntity } from 'src/entities/courses';
-import { CourseService } from '../course/course.service';
+import { CourseEntity, TagEntity } from 'src/entities/courses';
 import { KeyTokenEntity } from 'src/entities/auth';
-import { RedisService } from 'src/common/redis/redis.service';
 import { CourseModule } from '../course/course.module';
 
 @Module({
