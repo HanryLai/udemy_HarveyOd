@@ -401,7 +401,6 @@ describe('Category Service', () => {
             expect(error.error.message).toEqual('Database error');
          }
 
-         // Kiểm tra các phương thức đã được gọi với đúng tham số
          expect(entityManagerMock.createQueryBuilder).toHaveBeenCalled();
          expect(entityManagerMock.update).toHaveBeenCalled();
          expect(entityManagerMock.set).toHaveBeenCalledWith({
@@ -411,6 +410,51 @@ describe('Category Service', () => {
          expect(entityManagerMock.where).toHaveBeenCalledWith('id = :id', { id });
          expect(entityManagerMock.returning).toHaveBeenCalledWith(['id', 'name', 'description']);
          expect(entityManagerMock.execute).toHaveBeenCalled();
+      });
+   });
+
+   describe('Delete category', () => {
+      it('should delete category successfully', async () => {
+         const mockDeleteResult = { affected: 1, raw: [] };
+         jest.spyOn(categoryRepo, 'delete').mockResolvedValue(mockDeleteResult);
+
+         const result = await service.deleteCategory('1');
+
+         expect(result).toEqual(
+            new OK({
+               message: 'delete category successfully',
+               metadata: mockDeleteResult,
+            }),
+         );
+         expect(categoryRepo.delete).toHaveBeenCalledWith({ id: '1' });
+      });
+
+      it('should delete category failed because not found category', async () => {
+         const mockDeleteResult = { affected: 0, raw: [] };
+         jest.spyOn(categoryRepo, 'delete').mockResolvedValue(mockDeleteResult);
+
+         const result = await service.deleteCategory('1');
+
+         expect(result).toEqual(
+            new ErrorResponse({
+               statusCode: 404,
+               message: 'delete category failed because not found this category',
+               metadata: {},
+            }),
+         );
+         expect(categoryRepo.delete).toHaveBeenCalledWith({ id: '1' });
+      });
+
+      it('should return error response if deletion fails', async () => {
+         const mockError = new Error('Deletion error');
+         jest.spyOn(categoryRepo, 'delete').mockRejectedValue(mockError);
+         try {
+            await service.deleteCategory('1');
+         } catch (error) {
+            expect(error).toBeInstanceOf(HttpExceptionFilter);
+            expect(error.message).toBe('delete category failed');
+            expect(error.error.message).toBe('Deletion error');
+         }
       });
    });
 

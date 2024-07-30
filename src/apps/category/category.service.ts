@@ -156,7 +156,13 @@ export class CategoryService {
    public async deleteCategory(id: string): Promise<MessageResponse> {
       try {
          const result = await this.categoryRepo.delete({ id });
-         console.log(result);
+         if (result.affected == 0)
+            return new ErrorResponse({
+               statusCode: 404,
+               message: 'delete category failed because not found this category',
+               metadata: {},
+            });
+
          return new OK({
             message: 'delete category successfully',
             metadata: result,
