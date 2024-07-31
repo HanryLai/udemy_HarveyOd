@@ -10,7 +10,7 @@ export class TagEntity extends BaseEntity<TagEntity> implements ITagEntity {
    @Column({ type: 'varchar', name: 'description' })
    description: string;
 
-   @ManyToMany(() => CourseEntity, { cascade: true })
+   @ManyToMany(() => CourseEntity, (course) => course.tags, { cascade: true })
    @JoinTable()
    courses: CourseEntity[];
 }
