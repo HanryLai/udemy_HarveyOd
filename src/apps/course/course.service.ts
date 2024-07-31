@@ -1,16 +1,18 @@
 import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { CreateCourseDto } from './dto/create-course.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
+import { RedisService } from 'src/common/redis/redis.service';
+import { AccountEntity } from 'src/entities/accounts';
+import { KeyTokenEntity } from 'src/entities/auth';
+import { CourseEntity, TagEntity } from 'src/entities/courses';
+import { KeyTokenRepository } from 'src/repositories/auth';
 import { CourseRepository } from 'src/repositories/courses';
 import { EntityManager } from 'typeorm';
-import { AccountEntity } from 'src/entities/accounts';
-import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
-import { CategoryEntity, CourseEntity } from 'src/entities/courses';
-import { InjectRepository } from '@nestjs/typeorm';
-import { KeyTokenRepository } from 'src/repositories/auth';
-import { KeyTokenEntity } from 'src/entities/auth';
-import { RedisService } from 'src/common/redis/redis.service';
 import { CategoryService } from '../category/category.service';
 import { CategoryCourseDto, UpdateCategoryDto } from '../category/dto';
+import { TagService } from '../tag/tag.service';
+import { CreateCourseDto } from './dto/create-course.dto';
+import { number } from 'joi';
 
 @Injectable()
 export class CourseService {
@@ -20,6 +22,8 @@ export class CourseService {
 
       @Inject(forwardRef(() => CategoryService))
       private categoryService: CategoryService,
+      @Inject(forwardRef(() => TagService))
+      private tagService: TagService,
 
       private entityManager: EntityManager,
       private redisService: RedisService,
@@ -187,6 +191,7 @@ export class CourseService {
             const newCourse = new CourseEntity({
                ...createCourseDto,
                instructor: foundAccount,
+               tags: [],
             });
             const resultSave = entityManager.save(newCourse);
             return resultSave;
@@ -218,7 +223,7 @@ export class CourseService {
       }
    }
 
-   public async updateCourseCategory(
+   public async updateCourseCategories(
       categoryCourse: CategoryCourseDto,
       token: string,
    ): Promise<MessageResponse> {
@@ -256,6 +261,48 @@ export class CourseService {
             message: 'Add categoryCourse failed',
             error: error,
          });
+      }
+   }
+
+   public async updateCourseTags(idCourse: string, listIdTags: string[]) {
+      try {
+         const courseFound = await this.courseRepo.findOne({
+            where: {
+               id: idCourse,
+            },
+            relations: ['tags'],
+         });
+
+         if (Object.entries(courseFound).length === 0)
+            return new ErrorResponse({
+               message: 'Cannot found this course',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+         const getListTagsEntities = await this.tagService.getListTags(listIdTags);
+         if (getListTagsEntities instanceof ErrorResponse) {
+            return getListTagsEntities;
+         } else if (typeof getListTagsEntities[0] == 'number') {
+            return new ErrorResponse({
+               message: 'Cannot found one element tag in list tags',
+               statusCode: HttpStatus.NOT_FOUND,
+               metadata: {
+                  indexError: getListTagsEntities,
+               },
+            });
+         } else if (typeof getListTagsEntities[0] == 'object') {
+            console.log('courseFound');
+            console.log(courseFound);
+            courseFound.tags = getListTagsEntities as TagEntity[];
+            const result = await this.courseRepo.save(courseFound);
+            return new OK({
+               message: 'Add tags to course successfully',
+               metadata: result,
+            });
+         }
+      } catch (error) {
+         console.log(error);
+         throw new HttpExceptionFilter({ message: 'Error add tags to course', error: error });
       }
    }
 
