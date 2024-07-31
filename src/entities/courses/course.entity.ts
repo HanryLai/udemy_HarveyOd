@@ -14,6 +14,7 @@ import { AssignmentEntity } from './assignment.entity';
 import { QuizQuestionEntity } from './question.entity';
 import { InteractionEntity } from './interaction.entity';
 import { CourseType } from 'src/constants/enums/course-type.enum.constant';
+import { TagEntity } from './tag.entity';
 
 @Entity({ name: 'course' })
 export class CourseEntity extends BaseEntity<CourseEntity> implements ICourse {
@@ -55,6 +56,9 @@ export class CourseEntity extends BaseEntity<CourseEntity> implements ICourse {
    @ManyToMany(() => CategoryEntity, { cascade: true })
    @JoinTable()
    categories: CategoryEntity[];
+
+   @ManyToMany(() => TagEntity, (tag) => tag.courses)
+   tags: TagEntity[];
 
    @OneToMany(() => CourseProgressEntity, (progres) => progres.course)
    progress: CourseProgressEntity;
