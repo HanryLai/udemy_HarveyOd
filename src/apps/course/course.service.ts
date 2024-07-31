@@ -116,6 +116,44 @@ export class CourseService {
       }
    }
 
+   public async findTagsOfCourse(idCourse: string): Promise<MessageResponse> {
+      try {
+         const courseTags = await this.courseRepo.findOne({
+            where: {
+               id: idCourse,
+            },
+            relations: {
+               tags: true,
+            },
+            select: ['tags', 'id'],
+         });
+         if (courseTags === null) {
+            return new ErrorResponse({
+               message: 'This course not exist',
+               metadata: {},
+               statusCode: 404,
+            });
+         }
+         if (courseTags.tags.length === 0) {
+            return new ErrorResponse({
+               message: 'Not exist any tag',
+               metadata: {},
+               statusCode: 404,
+            });
+         }
+         return new OK({
+            message: 'Found tags by course successfully',
+            metadata: courseTags,
+         });
+      } catch (error) {
+         console.log(error);
+         throw new HttpExceptionFilter({
+            message: 'Find tags by course id failed',
+            error: error,
+         });
+      }
+   }
+
    public async findByOffSet(offset: number): Promise<MessageResponse> {
       try {
          if (offset < 1 || !offset) offset = 1;

@@ -37,6 +37,16 @@ export class CourseController {
    public async getCategoryOfCourse(@Param('course_id') id: string): Promise<MessageResponse> {
       return await this.courseService.findCategoryOfCourse(id);
    }
+
+   //GET
+   @Get('/tags/:course_id')
+   @ApiOperation({ summary: 'Get list tags of course' })
+   @ApiFoundResponse({ description: 'Found list tags' })
+   @ApiBody({ type: TagsCourseDto, description: 'About information of tag' })
+   public async getTagsOfCourse(@Param('course_id') id: string): Promise<MessageResponse> {
+      return await this.courseService.findTagsOfCourse(id);
+   }
+
    //GET
    @Get('')
    @ApiOperation({ summary: 'Get courses' })
