@@ -1,18 +1,21 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreateTagDto } from './dto/create-tag.dto';
-import { UpdateTagDto } from './dto/update-tag.dto';
+import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { TagEntity } from 'src/entities/courses';
 import { TagRepository } from 'src/repositories/courses';
-import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
-import { EntityManager, In } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { CourseService } from '../course/course.service';
+import { CreateTagDto } from './dto/create-tag.dto';
+import { UpdateTagDto } from './dto/update-tag.dto';
 
 @Injectable()
 export class TagService {
    constructor(
-      @InjectRepository(TagEntity) private tagRepo: TagRepository,
+      @InjectRepository(TagEntity)
+      private tagRepo: TagRepository,
       private readonly entityManager: EntityManager,
+
+      @Inject(forwardRef(() => CourseService))
       private courseService: CourseService,
    ) {}
 
@@ -71,7 +74,7 @@ export class TagService {
                offset: offset,
                limit: limit,
                totalPage: Math.ceil(totalTags),
-               totalCourseOfPage: listTags.length,
+               totalTagsOfPage: listTags.length,
             },
          });
       } catch (error) {
@@ -147,6 +150,28 @@ export class TagService {
             message: 'Update tag have error',
             error: error,
          });
+      }
+   }
+
+   public async getListTags(listIdTags: string[]): Promise<TagEntity[] | number[] | ErrorResponse> {
+      try {
+         let listTagEntities: TagEntity[] = [];
+         let indexError: number[] = [];
+
+         await Promise.all(
+            listIdTags.map(async (id, index) => {
+               const tagFound = await this.findById(id);
+               const tagEntity = tagFound.metadata;
+               if (Object.keys(tagEntity).length === 0) {
+                  indexError.push(index);
+               }
+               listTagEntities.push(tagEntity);
+            }),
+         );
+         if (indexError.length !== 0) return indexError;
+         return listTagEntities;
+      } catch (error) {
+         throw new HttpExceptionFilter({ message: 'Error get list tags ', error: error });
       }
    }
 
