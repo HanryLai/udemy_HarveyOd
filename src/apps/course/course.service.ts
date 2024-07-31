@@ -12,7 +12,6 @@ import { CategoryService } from '../category/category.service';
 import { CategoryCourseDto, UpdateCategoryDto } from '../category/dto';
 import { TagService } from '../tag/tag.service';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { number } from 'joi';
 
 @Injectable()
 export class CourseService {
@@ -272,7 +271,14 @@ export class CourseService {
             },
             relations: ['tags'],
          });
-
+         if (listIdTags.length === 0) {
+            courseFound.tags = [];
+            const result = await this.courseRepo.save(courseFound);
+            return new OK({
+               message: 'Add tags to course successfully',
+               metadata: result,
+            });
+         }
          if (Object.entries(courseFound).length === 0)
             return new ErrorResponse({
                message: 'Cannot found this course',
@@ -291,8 +297,6 @@ export class CourseService {
                },
             });
          } else if (typeof getListTagsEntities[0] == 'object') {
-            console.log('courseFound');
-            console.log(courseFound);
             courseFound.tags = getListTagsEntities as TagEntity[];
             const result = await this.courseRepo.save(courseFound);
             return new OK({
