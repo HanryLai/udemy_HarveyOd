@@ -2,7 +2,6 @@ import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
-import { RedisService } from 'src/common/redis/redis.service';
 import { AccountEntity } from 'src/entities/accounts';
 import { CategoryEntity } from 'src/entities/courses';
 import { CategoryRepository } from 'src/repositories/courses';
@@ -16,7 +15,6 @@ describe('Category Service', () => {
    let categoryRepo: CategoryRepository;
    let entityManager: Partial<EntityManager>;
    let courseService: CourseService;
-   let redisService: RedisService;
 
    const entityManagerMock = {
       createQueryBuilder: jest.fn().mockReturnThis(),
@@ -47,10 +45,6 @@ describe('Category Service', () => {
                useValue: {
                   findAccountByToken: jest.fn(),
                },
-            },
-            {
-               provide: RedisService,
-               useValue: {},
             },
          ],
       }).compile();
