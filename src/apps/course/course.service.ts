@@ -263,7 +263,7 @@ export class CourseService {
       }
    }
 
-   public async updateCourseTags(idCourse: string, listIdTags: string[]) {
+   public async updateCourseTags(idCourse: string, listIdTags: string[]): Promise<MessageResponse> {
       try {
          const courseFound = await this.courseRepo.findOne({
             where: {
