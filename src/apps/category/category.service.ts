@@ -50,9 +50,9 @@ export class CategoryService {
       }
    }
 
-   public async findAll(offset): Promise<MessageResponse> {
+   public async findAll(offset: number): Promise<MessageResponse> {
       try {
-         if (offset < 1) offset = 1;
+         if (offset < 1 || !offset) offset = 1;
          const limit = 10;
          const listCategory = await this.categoryRepo.find({
             select: ['id', 'name', 'description'],
