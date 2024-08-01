@@ -5,7 +5,7 @@ import { CourseEntity } from './course.entity';
 
 @Entity({ name: 'tag' })
 export class TagEntity extends BaseEntity<TagEntity> implements ITagEntity {
-   @Column({ type: 'varchar', name: 'name' })
+   @Column({ type: 'varchar', name: 'name', unique: true })
    name: string;
    @Column({ type: 'varchar', name: 'description' })
    description: string;
