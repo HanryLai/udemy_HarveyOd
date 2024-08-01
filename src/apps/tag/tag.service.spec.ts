@@ -5,6 +5,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { CourseService } from '../course/course.service';
 import { TagService } from './tag.service';
 import { TagEntity } from 'src/entities/courses';
+import { CREATED, ErrorResponse, HttpExceptionFilter } from 'src/common';
 
 describe('Tag Service', () => {
    let service: TagService;
@@ -124,12 +125,22 @@ describe('Tag Service', () => {
       });
    });
 
-   it('should normalize offset to 1 if offset is less than 1', async () => {
+   it('should normalize offset to 1 if offset is less than 1 ', async () => {
       const mockTags = listMockTagEntities;
       jest.spyOn(tagRepository, 'find').mockResolvedValue(mockTags);
       jest.spyOn(tagRepository, 'count').mockResolvedValue(10);
 
       const result = await service.findAll(0);
+
+      expect(result.metadata.offset).toBe(1);
+   });
+
+   it('should normalize offset is undefined ', async () => {
+      const mockTags = listMockTagEntities;
+      jest.spyOn(tagRepository, 'find').mockResolvedValue(mockTags);
+      jest.spyOn(tagRepository, 'count').mockResolvedValue(10);
+
+      const result = await service.findAll(undefined);
 
       expect(result.metadata.offset).toBe(1);
    });
@@ -191,12 +202,55 @@ describe('Tag Service', () => {
             }),
       );
       jest.spyOn(tagRepository, 'find').mockResolvedValue(mockTags);
-      jest.spyOn(tagRepository, 'count').mockResolvedValue(20); // 2 pages
+      jest.spyOn(tagRepository, 'count').mockResolvedValue(20);
 
       const result = await service.findAll(2);
 
       expect(result.metadata.listTags).toEqual(mockTags);
       expect(result.metadata.totalPage).toBe(2);
       expect(result.metadata.totalTagsOfPage).toBe(mockTags.length);
+   });
+
+   describe('Create new tag', () => {
+      it('should create a new tag successfully', async () => {
+         const newTag = { name: 'New Tag', description: 'Tag Description' };
+
+         jest.spyOn(tagRepository, 'findOne').mockResolvedValue(null);
+         jest.spyOn(tagRepository, 'save').mockResolvedValue(newTag as any);
+
+         const result = await service.create(newTag);
+
+         expect(result).toBeInstanceOf(CREATED);
+         expect(result.message).toBe('Create new category successfully');
+         expect(result.metadata).toEqual(newTag);
+      });
+
+      it('should return an error if the tag name already exists', async () => {
+         const existingTag = { id: '1', name: 'Existing Tag', description: 'Tag Description' };
+         const newTag = { name: 'Existing Tag', description: 'Tag Description' };
+
+         jest.spyOn(tagRepository, 'findOne').mockResolvedValue(existingTag as any);
+
+         const result = await service.create(newTag);
+
+         expect(result).toBeInstanceOf(ErrorResponse);
+         expect(result.message).toBe('This name existed, create failed');
+         expect(result.metadata).toEqual(existingTag);
+      });
+
+      it('should throw an error if there is an issue creating the tag', async () => {
+         const newTag = { name: 'New Tag', description: 'Tag Description' };
+
+         jest.spyOn(tagRepository, 'findOne').mockResolvedValue(null);
+         jest.spyOn(tagRepository, 'save').mockRejectedValue(new Error('Database error'));
+
+         try {
+            await service.create(newTag);
+         } catch (error) {
+            expect(error.error.message).toBe('Database error');
+            expect(error).toBeInstanceOf(HttpExceptionFilter);
+            expect(error.message).toBe('Create new category have error');
+         }
+      });
    });
 });
