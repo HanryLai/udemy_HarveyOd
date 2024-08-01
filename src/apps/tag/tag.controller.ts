@@ -1,17 +1,6 @@
-import {
-   Body,
-   Controller,
-   Delete,
-   Get,
-   Param,
-   Patch,
-   Post,
-   Query,
-   UseGuards,
-   UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ExistToken, MessageResponse, RequestInterceptor, TokenCurrent } from 'src/common';
+import { MessageResponse } from 'src/common';
 import { CreateTagDto, UpdateTagDto } from './dto';
 import { TagService } from './tag.service';
 

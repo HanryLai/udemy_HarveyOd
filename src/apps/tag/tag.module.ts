@@ -1,10 +1,10 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { TagService } from './tag.service';
-import { TagController } from './tag.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CourseEntity, TagEntity } from 'src/entities/courses';
 import { KeyTokenEntity } from 'src/entities/auth';
+import { CourseEntity, TagEntity } from 'src/entities/courses';
 import { CourseModule } from '../course/course.module';
+import { TagController } from './tag.controller';
+import { TagService } from './tag.service';
 
 @Module({
    imports: [

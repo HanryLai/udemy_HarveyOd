@@ -1,12 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { CourseController } from './course.controller';
-import { CourseService } from './course.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CategoryEntity, CourseEntity } from 'src/entities/courses';
-import { KeyTokenEntity } from 'src/entities/auth';
 import { RedisService } from 'src/common/redis/redis.service';
+import { KeyTokenEntity } from 'src/entities/auth';
+import { CategoryEntity, CourseEntity } from 'src/entities/courses';
 import { CategoryModule } from '../category/category.module';
 import { TagModule } from '../tag/tag.module';
+import { CourseController } from './course.controller';
+import { CourseService } from './course.service';
 
 @Module({
    imports: [

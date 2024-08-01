@@ -1,6 +1,7 @@
+import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { CREATED, ErrorResponse, HttpExceptionFilter, OK } from 'src/common';
+import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { TagEntity } from 'src/entities/courses';
 import { TagRepository } from 'src/repositories/courses';
 import { EntityManager, QueryFailedError } from 'typeorm';
@@ -422,6 +423,131 @@ describe('Tag Service', () => {
          } catch (error) {
             expect(error).toBeInstanceOf(HttpExceptionFilter);
             expect(error.message).toBe('Error check duplicate name tag');
+         }
+      });
+   });
+
+   describe('getListTags', () => {
+      const findByIdResponse = (tag: TagEntity) => {
+         return tag
+            ? new OK({
+                 message: 'Found tag',
+                 metadata: tag,
+              })
+            : new ErrorResponse({
+                 message: 'Cannot found this tag',
+                 statusCode: HttpStatus.BAD_REQUEST,
+                 metadata: {},
+              });
+      };
+      it('should return list of tag entities for valid IDs', async () => {
+         const listIdTags = ['1', '2'];
+         const mockTagEntities = [
+            new TagEntity({ id: '1', name: 'Tag 1', description: 'Description 1' }),
+            new TagEntity({ id: '2', name: 'Tag 2', description: 'Description 2' }),
+         ];
+
+         jest
+            .spyOn(service, 'findById')
+            .mockImplementation(async (id: string): Promise<MessageResponse> => {
+               const tag = mockTagEntities.find((tag) => tag.id === id);
+               return findByIdResponse(tag);
+            });
+
+         const result = await service.getListTags(listIdTags);
+
+         expect(result).toEqual(mockTagEntities);
+      });
+
+      it('should return indices of missing tags', async () => {
+         const listIdTags = ['1', '2', '3'];
+         const mockTagEntities = [
+            new TagEntity({ id: '1', name: 'Tag 1', description: 'Description 1' }),
+            new TagEntity({ id: '2', name: 'Tag 2', description: 'Description 2' }),
+         ];
+
+         jest
+            .spyOn(service, 'findById')
+            .mockImplementation(async (id: string): Promise<MessageResponse> => {
+               const tag = mockTagEntities.find((tag) => tag.id === id);
+               return findByIdResponse(tag);
+            });
+
+         const result = await service.getListTags(listIdTags);
+
+         expect(result).toEqual([2]); // The index of the missing tag
+      });
+
+      it('should return an empty array when list of tag IDs is empty', async () => {
+         const listIdTags: string[] = [];
+
+         const result = await service.getListTags(listIdTags);
+
+         expect(result).toEqual([]);
+      });
+
+      it('should throw an HttpExceptionFilter when an error occurs', async () => {
+         const listIdTags = ['1', '2'];
+
+         jest.spyOn(service, 'findById').mockImplementation(() => {
+            throw new Error('Database error');
+         });
+         try {
+            await service.getListTags(listIdTags);
+         } catch (error) {
+            expect(error.message).toBe('Error get list tags ');
+         }
+      });
+   });
+
+   describe('Delete tag', () => {
+      it('should delete the tag successfully when the tag exists', async () => {
+         const id = 'valid-id';
+         jest.spyOn(tagRepository, 'delete').mockResolvedValue({ affected: 1 } as any);
+
+         const result = await service.delete(id);
+
+         expect(result).toEqual(
+            new OK({
+               message: 'Delete this tag successfully',
+               metadata: 'Effective 1',
+            }),
+         );
+      });
+
+      it('should return error when the tag does not exist', async () => {
+         const id = 'non-existent-id';
+         jest.spyOn(tagRepository, 'delete').mockResolvedValue({ affected: 0 } as any);
+
+         const result = await service.delete(id);
+
+         expect(result).toEqual(
+            new ErrorResponse({
+               message: 'Not found this tag',
+               statusCode: 404,
+               metadata: {},
+            }),
+         );
+      });
+
+      it('should throw an error if there is an issue deleting the tag', async () => {
+         const id = 'valid-id';
+         jest.spyOn(tagRepository, 'delete').mockRejectedValue(new Error('Database error'));
+
+         try {
+            await service.delete(id);
+         } catch (error) {
+            expect(error.error.message).toBe('Database error');
+            expect(error.message).toBe('Delete tag have error');
+         }
+      });
+
+      it('should throw an error if the provided ID is invalid', async () => {
+         try {
+            const id = '';
+            await service.delete(id);
+         } catch (error) {
+            expect(error.message).toBe('Delete tag have error');
          }
       });
    });

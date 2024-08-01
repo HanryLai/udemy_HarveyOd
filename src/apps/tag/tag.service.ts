@@ -181,6 +181,7 @@ export class TagService {
          if (indexError.length !== 0) return indexError;
          return listTagEntities;
       } catch (error) {
+         console.log(error);
          throw new HttpExceptionFilter({ message: 'Error get list tags ', error: error });
       }
    }
