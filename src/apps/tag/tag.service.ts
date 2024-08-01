@@ -50,7 +50,7 @@ export class TagService {
 
    public async findAll(offset: number): Promise<MessageResponse> {
       try {
-         if (offset < 1) offset = 1;
+         if (offset < 1 || !offset) offset = 1;
          const limit = 10;
          const listTags = await this.tagRepo.find({
             select: ['id', 'name', 'description'],
@@ -85,15 +85,8 @@ export class TagService {
       }
    }
 
-   public async create(authToken: string, tag: CreateTagDto): Promise<MessageResponse> {
+   public async create(tag: CreateTagDto): Promise<MessageResponse> {
       try {
-         const foundAccount = await this.courseService.findAccountByToken(authToken);
-         if (!foundAccount)
-            return new ErrorResponse({
-               message: "Don't have permission or don't login before",
-               statusCode: HttpStatus.BAD_REQUEST,
-               metadata: {},
-            });
          const foundTag = await this.tagRepo.findOne({
             where: {
                name: tag.name,
