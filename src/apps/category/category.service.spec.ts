@@ -193,7 +193,6 @@ describe('Category Service', () => {
          jest.spyOn(categoryRepo, 'find').mockResolvedValue([]);
          jest.spyOn(categoryRepo, 'count').mockResolvedValue(0);
          const result = await service.findAll(1);
-         console.log(result);
          expect(result).toStrictEqual(
             new ErrorResponse({
                message: 'Not have any category',
@@ -497,7 +496,6 @@ describe('Category Service', () => {
          const result = (await service.getListCategory(listCategoryIds)) as CategoryEntity[];
          expect(result).toHaveLength(listCategoryIds.length);
          result.forEach((category, index) => {
-            console.log('category+' + category.id);
             expect(category.id).toBe(listCategoryIds[index]);
             expect(category.name).toBe(`Category ${listCategoryIds[index]}`);
             expect(category.description).toBe(`Description of Category ${listCategoryIds[index]}`);
