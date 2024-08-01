@@ -1,11 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { TagRepository } from 'src/repositories/courses';
-import { EntityManager, Repository } from 'typeorm';
-import { CourseService } from '../course/course.service';
-import { TagService } from './tag.service';
+import { CREATED, ErrorResponse, HttpExceptionFilter, OK } from 'src/common';
 import { TagEntity } from 'src/entities/courses';
-import { CREATED, ErrorResponse, HttpExceptionFilter } from 'src/common';
+import { TagRepository } from 'src/repositories/courses';
+import { EntityManager, QueryFailedError } from 'typeorm';
+import { CourseService } from '../course/course.service';
+import { UpdateTagDto } from './dto';
+import { TagService } from './tag.service';
 
 describe('Tag Service', () => {
    let service: TagService;
@@ -13,7 +14,14 @@ describe('Tag Service', () => {
    let tagRepository: TagRepository;
    let entityManager: Partial<EntityManager>;
    let courseService: CourseService;
-   const entityManagerMock = {};
+   const entityManagerMock = {
+      createQueryBuilder: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      returning: jest.fn().mockReturnThis(),
+      execute: jest.fn(),
+   };
    beforeEach(async () => {
       const module: TestingModule = await Test.createTestingModule({
          providers: [
@@ -171,9 +179,7 @@ describe('Tag Service', () => {
       try {
          await service.findAll(1);
       } catch (error) {
-         console.log(error.message);
          expect(error.error.message).toBe('Database error');
-         // expect(error)
       }
    });
 
@@ -250,6 +256,172 @@ describe('Tag Service', () => {
             expect(error.error.message).toBe('Database error');
             expect(error).toBeInstanceOf(HttpExceptionFilter);
             expect(error.message).toBe('Create new category have error');
+         }
+      });
+   });
+
+   describe('Update tag', () => {
+      it('should successfully update a tag', async () => {
+         const mockUpdateResult = {
+            affected: 1,
+            raw: [{ id: '1', name: 'Updated Tag', description: 'Updated Description' }],
+         };
+
+         jest.spyOn(service, 'isDuplicateTagName').mockResolvedValue(false); // Simulate no duplicate name
+         jest.spyOn(entityManagerMock, 'execute').mockReturnValue(mockUpdateResult);
+
+         const updateDto: UpdateTagDto = {
+            name: 'Updated Tag',
+            description: 'Updated Description',
+         };
+         const result = await service.update(updateDto, '1');
+
+         expect(result).toBeInstanceOf(OK);
+         expect(result.metadata).toEqual(mockUpdateResult.raw);
+      });
+
+      it('should return an error if the tag name already exists', async () => {
+         jest.spyOn(service, 'isDuplicateTagName').mockResolvedValue(true);
+
+         const updateDto: UpdateTagDto = {
+            name: 'Duplicate Tag',
+            description: 'Updated Description',
+         };
+         const result = await service.update(updateDto, '1');
+
+         expect(result).toBeInstanceOf(ErrorResponse);
+         expect(result.message).toBe('This name existed, update failed');
+      });
+
+      it('should return an error if the tag is not found', async () => {
+         const mockUpdateResult = { affected: 0 };
+
+         jest.spyOn(service, 'isDuplicateTagName').mockResolvedValue(false);
+         jest.spyOn(entityManagerMock, 'execute').mockReturnValue(mockUpdateResult);
+         const updateDto: UpdateTagDto = {
+            name: 'Updated Tag',
+            description: 'Updated Description',
+         };
+         const result = await service.update(updateDto, '1');
+
+         expect(result).toBeInstanceOf(ErrorResponse);
+         expect(result.message).toBe('Cannot found this tag');
+      });
+
+      it('should handle errors gracefully', async () => {
+         jest.spyOn(service, 'isDuplicateTagName').mockResolvedValue(false); // Simulate no duplicate name
+         jest.spyOn(entityManagerMock, 'execute').mockRejectedValue(new Error('Unexpected error'));
+
+         const updateDto: UpdateTagDto = {
+            name: 'Updated Tag',
+            description: 'Updated Description',
+         };
+         try {
+            await service.update(updateDto, '1');
+         } catch (error) {
+            expect(error.error.message).toBe('Unexpected error');
+            expect(error.message).toBe('Update tag have error');
+         }
+      });
+
+      it('should successfully update only provided fields', async () => {
+         const mockUpdateResult = {
+            affected: 1,
+            raw: [{ id: '1', name: 'Updated Tag', description: 'Original Description' }],
+         };
+
+         jest.spyOn(service, 'isDuplicateTagName').mockResolvedValue(false); // Simulate no duplicate name
+         jest.spyOn(entityManagerMock, 'execute').mockResolvedValue(mockUpdateResult);
+
+         const updateDto: UpdateTagDto = { name: 'Updated Tag' }; // Only updating the name
+         const result = await service.update(updateDto, '1');
+
+         expect(result).toBeInstanceOf(OK);
+         expect(result.metadata).toEqual(mockUpdateResult.raw);
+      });
+
+      it('should return an error if the tag ID is empty', async () => {
+         const updateDto: UpdateTagDto = {
+            name: 'Updated Tag',
+            description: 'Updated Description',
+         };
+
+         const result = await service.update(updateDto, '   ');
+         expect(result).toBeInstanceOf(ErrorResponse);
+         expect(result.message).toBe('ID not empty');
+      });
+
+      it('should handle invalid UUID input', async () => {
+         const invalidUuid = '2'; // Example of an invalid UUID
+         const updateDto: UpdateTagDto = {
+            description: 'Updated Description',
+         };
+
+         jest
+            .spyOn(entityManagerMock, 'execute')
+            .mockRejectedValue(
+               new QueryFailedError('', [], new Error('invalid input syntax for type uuid')),
+            );
+
+         try {
+            await service.update(updateDto, invalidUuid);
+         } catch (error) {
+            expect(error).toBeInstanceOf(HttpExceptionFilter);
+            expect(error.message).toBe('Update tag have error');
+         }
+      });
+   });
+
+   describe('IsDuplicateTagName', () => {
+      it('should return true if a duplicate tag name is found with a different id', async () => {
+         const tagName = 'Test Tag';
+         const tagId = '1234-5678-9012';
+
+         jest.spyOn(tagRepository, 'findOne').mockResolvedValue({
+            id: 'another-id',
+            name: tagName,
+            description: 'Some description',
+         } as TagEntity);
+
+         const result = await service.isDuplicateTagName(tagName, tagId);
+         expect(result).toBe(true);
+      });
+
+      it('should return false if a tag with the same name and id is found', async () => {
+         const tagName = 'Test Tag';
+         const tagId = '1234-5678-9012';
+
+         jest.spyOn(tagRepository, 'findOne').mockResolvedValue({
+            id: tagId,
+            name: tagName,
+            description: 'Some description',
+         } as TagEntity);
+
+         const result = await service.isDuplicateTagName(tagName, tagId);
+         expect(result).toBe(false);
+      });
+
+      it('should return false if no tag is found with the given name', async () => {
+         const tagName = 'Non-existent Tag';
+         const tagId = '1234-5678-9012';
+
+         jest.spyOn(tagRepository, 'findOne').mockResolvedValue(null);
+
+         const result = await service.isDuplicateTagName(tagName, tagId);
+         expect(result).toBe(false);
+      });
+
+      it('should throw an error if the repository throws an error', async () => {
+         const tagName = 'Test Tag';
+         const tagId = '1234-5678-9012';
+
+         jest.spyOn(tagRepository, 'findOne').mockRejectedValue(new Error('Database error'));
+
+         try {
+            await service.isDuplicateTagName(tagName, tagId);
+         } catch (error) {
+            expect(error).toBeInstanceOf(HttpExceptionFilter);
+            expect(error.message).toBe('Error check duplicate name tag');
          }
       });
    });
