@@ -39,17 +39,12 @@ export class TagController {
       return await this.tagService.findAll(page);
    }
 
-   @UseInterceptors(RequestInterceptor)
-   @UseGuards(ExistToken)
    @Post('/create')
    @ApiOperation({ summary: 'Create new tag' })
    @ApiOkResponse({ description: 'Create new tag successfully' })
    @ApiBody({ type: CreateTagDto, description: 'About schema tag' })
-   public async create(
-      @Body() tag: CreateTagDto,
-      @TokenCurrent() authToken: string,
-   ): Promise<MessageResponse> {
-      return await this.tagService.create(authToken, tag);
+   public async create(@Body() tag: CreateTagDto): Promise<MessageResponse> {
+      return await this.tagService.create(tag);
    }
 
    @UseInterceptors(RequestInterceptor)
