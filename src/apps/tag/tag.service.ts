@@ -112,11 +112,7 @@ export class TagService {
       }
    }
 
-   public async update(
-      authToken: string,
-      tag: UpdateTagDto,
-      idTag: string,
-   ): Promise<MessageResponse> {
+   public async update(tag: UpdateTagDto, idTag: string): Promise<MessageResponse> {
       try {
          const result = await this.entityManager
             .createQueryBuilder()

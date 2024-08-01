@@ -47,18 +47,15 @@ export class TagController {
       return await this.tagService.create(tag);
    }
 
-   @UseInterceptors(RequestInterceptor)
-   @UseGuards(ExistToken)
    @Post('/update/:id')
    @ApiOperation({ summary: 'Update tag' })
    @ApiOkResponse({ description: 'Update tag successfully' })
    @ApiBody({ type: UpdateTagDto, description: 'About schema tag' })
    public async update(
       @Body() tag: UpdateTagDto,
-      @TokenCurrent() authToken: string,
       @Param('id') id: string,
    ): Promise<MessageResponse> {
-      return await this.tagService.update(authToken, tag, id);
+      return await this.tagService.update(tag, id);
    }
 
    @Delete('/delete/:id')
