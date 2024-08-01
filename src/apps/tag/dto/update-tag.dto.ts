@@ -5,9 +5,9 @@ import { IsString } from 'class-validator';
 export class UpdateTagDto extends PartialType(CreateTagDto) {
    @ApiProperty()
    @IsString()
-   name: string;
+   name?: string;
 
    @ApiProperty()
    @IsString()
-   description: string;
+   description?: string;
 }
