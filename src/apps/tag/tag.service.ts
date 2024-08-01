@@ -114,6 +114,25 @@ export class TagService {
 
    public async update(tag: UpdateTagDto, idTag: string): Promise<MessageResponse> {
       try {
+         if (!idTag.trim()) {
+            return new ErrorResponse({
+               message: 'ID not empty',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+         }
+
+         let validUpdate = true;
+         if (tag?.name) validUpdate = !(await this.isDuplicateTagName(tag.name, idTag)); // check valid update name
+
+         if (!validUpdate)
+            // Error duplicate name
+            return new ErrorResponse({
+               message: 'This name existed, update failed',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+         //update tag
          const result = await this.entityManager
             .createQueryBuilder()
             .update(TagEntity)
@@ -123,12 +142,14 @@ export class TagService {
             .where('id = :id', { id: idTag })
             .returning('*')
             .execute();
+         // Error not found
          if (result.affected == 0)
             return new ErrorResponse({
-               message: 'Update tag failed',
+               message: 'Cannot found this tag',
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
+         // successfully
          const updatedTag = result.raw;
          return new OK({
             message: 'Update tag successfully',
@@ -180,6 +201,25 @@ export class TagService {
       } catch (error) {
          throw new HttpExceptionFilter({
             message: 'Delete tag have error',
+            error: error,
+         });
+      }
+   }
+
+   public async isDuplicateTagName(name: string, id: string): Promise<boolean> {
+      try {
+         const tagName = name;
+         const foundTagDuplicate = await this.tagRepo.findOne({
+            where: {
+               name: tagName,
+            },
+            select: ['name', 'description', 'id'],
+         });
+         // same name and same ID => true, else false
+         return foundTagDuplicate && foundTagDuplicate.id !== id ? true : false;
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Error check duplicate name tag',
             error: error,
          });
       }
