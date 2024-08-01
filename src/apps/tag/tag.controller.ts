@@ -4,6 +4,7 @@ import {
    Delete,
    Get,
    Param,
+   Patch,
    Post,
    Query,
    UseGuards,
@@ -47,7 +48,7 @@ export class TagController {
       return await this.tagService.create(tag);
    }
 
-   @Post('/update/:id')
+   @Patch('/update/:id')
    @ApiOperation({ summary: 'Update tag' })
    @ApiOkResponse({ description: 'Update tag successfully' })
    @ApiBody({ type: UpdateTagDto, description: 'About schema tag' })
