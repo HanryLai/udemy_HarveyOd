@@ -1,12 +1,13 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { LoggerMiddleware } from './middlewares';
 import { PostgresDatabaseModule } from './common';
 import { AuthModule } from './apps/auth/auth.module';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { QueueModule } from './common/queue/queue.module';
+
 import { LoggersModule } from './loggers/loggers.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
    imports: [
@@ -29,9 +30,17 @@ import { LoggersModule } from './loggers/loggers.module';
             limit: 1000,
          },
       ]),
+      BullModule.forRootAsync({
+         useFactory: (configService: ConfigService) => ({
+            redis: {
+               host: configService.get('REDIS_HOST'),
+               port: configService.get('REDIS_PORT'),
+            },
+         }),
+         inject: [ConfigService],
+      }),
 
       PostgresDatabaseModule,
-      QueueModule,
       AuthModule,
       LoggersModule,
    ],
