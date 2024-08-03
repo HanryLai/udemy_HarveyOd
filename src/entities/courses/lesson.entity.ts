@@ -5,6 +5,7 @@ import { CourseModuleEntity } from './module.entity';
 import { TypeUploadEntity } from './typeUpload.entity';
 import { LessionTestEntity } from './lessionTest.entity';
 
+
 @Entity({ name: 'course_lesson' })
 export class CourseLessonEntity extends BaseEntity<CourseLessonEntity> implements ILesson {
    @Index('IDX_COURSE_LESSON')
@@ -32,4 +33,6 @@ export class CourseLessonEntity extends BaseEntity<CourseLessonEntity> implement
 
    @ManyToOne(() => LessionTestEntity, (lesson) => lesson.lessons)
    lessonTest: LessionTestEntity;
+
+   
 }
