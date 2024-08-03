@@ -21,7 +21,7 @@ export class LoggersService implements LoggerService {
 
    warn(message: string, context?: any) {
       context = context || this.context;
-      console.log(message);
+      // console.log(message);
       this.logger.warn(message, { context });
    }
 
@@ -35,3 +35,4 @@ export class LoggersService implements LoggerService {
       this.logger.verbose(message, { context });
    }
 }
+
