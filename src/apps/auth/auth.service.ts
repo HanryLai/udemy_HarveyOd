@@ -283,7 +283,7 @@ export class AuthService {
             where: [{ username: registerDto.username }, { email: registerDto.email }],
             // select: { id: true, username: true, password: true, email: true, isVerified: true },
          });
-         
+
          if (foundAccount) {
             return new ErrorResponse({
                message: 'Account already exists',

@@ -8,7 +8,7 @@ import { MailService } from './mail.service';
 
 import { MailController } from './mail.controller';
 import { OtpService } from '../otp/otp.service';
-import { MailQueueModule } from './Queue/mail-queue.module';
+import { MailQueueModule } from './queue/mail-queue.module';
 
 @Module({
    imports: [

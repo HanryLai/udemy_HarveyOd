@@ -1,8 +1,8 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { BaseEntity } from '../bases';
 import { IProgressDetailEntity } from '../interfaces';
 import { CourseProgressEntity } from './progres.entity';
-import { CourseContentEntity } from './content.entity';
+import { CourseLessonEntity } from './lesson.entity';
 
 @Entity({ name: 'course_progress_detail' })
 export class ProgresDetailsEntity
@@ -18,6 +18,7 @@ export class ProgresDetailsEntity
    @ManyToOne(() => CourseProgressEntity, (progres) => progres.details)
    progres: CourseProgressEntity;
 
-   @ManyToOne(() => CourseContentEntity, (content) => content.details)
-   content: CourseContentEntity;
+   @OneToOne(() => CourseLessonEntity, { cascade: true })
+   @JoinColumn()
+   lesson: CourseLessonEntity;
 }
