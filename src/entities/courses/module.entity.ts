@@ -18,7 +18,7 @@ export class CourseModuleEntity extends BaseEntity<CourseModuleEntity> implement
    @Column({ name: 'is_published', type: 'boolean' })
    isPublished: boolean;
 
-   @Column({ name: 'is_deleted', type: 'boolean' })
+   @Column({ name: 'is_deleted', type: 'boolean', default: false })
    isDeleted: boolean;
 
    @ManyToOne(() => CourseEntity, (course) => course.modules)

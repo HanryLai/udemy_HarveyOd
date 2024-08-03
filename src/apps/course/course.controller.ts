@@ -3,17 +3,26 @@ import {
    Controller,
    Get,
    Param,
+   Patch,
    Post,
    Put,
    Query,
    UseGuards,
    UseInterceptors,
 } from '@nestjs/common';
-import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+   ApiBody,
+   ApiFoundResponse,
+   ApiOkResponse,
+   ApiOperation,
+   ApiParam,
+   ApiTags,
+} from '@nestjs/swagger';
 import { ExistToken, MessageResponse, RequestInterceptor, TokenCurrent } from 'src/common';
 import { CategoryCourseDto, CreateCategoryDto } from '../category/dto';
 import { CourseService } from './course.service';
 import { CreateCourseDto, TagsCourseDto, UpdateCourseDto } from './dto/';
+import { CourseType } from 'src/constants';
 
 @ApiTags('Courses')
 @Controller('courses')
@@ -51,9 +60,15 @@ export class CourseController {
    @Get('')
    @ApiOperation({ summary: 'Get courses' })
    @ApiFoundResponse({ description: 'Found  courses' })
+   @ApiParam({
+      name: 'type',
+   })
    @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
-   public async getCourseByOffSet(@Query('page') offset: number): Promise<MessageResponse> {
-      return await this.courseService.findByOffSet(offset);
+   public async getCourseByOffSet(
+      @Query('page') offset: number,
+      @Query('type') type: CourseType,
+   ): Promise<MessageResponse> {
+      return await this.courseService.findAll(offset, type);
    }
 
    // POST
@@ -88,6 +103,29 @@ export class CourseController {
       @TokenCurrent() token: string,
    ): Promise<MessageResponse> {
       return await this.courseService.updateCourseCategories(categoryCourse, token);
+   }
+
+   //PATCH
+   @Patch('course/status/:id_course')
+   @ApiOperation({ summary: 'Update status course' })
+   @ApiOkResponse({ description: 'Update status course successfully' })
+   @ApiBody({
+      schema: {
+         type: 'object',
+         properties: {
+            type: {
+               type: 'string',
+               example: 'publish',
+            },
+         },
+      },
+      description: 'About information of course category relationship ',
+   })
+   public async UpdateStatusCourse(
+      @Body() body: any,
+      @Param('id_course') id: string,
+   ): Promise<MessageResponse> {
+      return await this.courseService.updateStatusCourse(id, body.type);
    }
 
    //PUT

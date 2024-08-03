@@ -7,11 +7,13 @@ import { KeyTokenEntity } from 'src/entities/auth';
 import { CourseEntity, TagEntity } from 'src/entities/courses';
 import { KeyTokenRepository } from 'src/repositories/auth';
 import { CourseRepository } from 'src/repositories/courses';
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { CategoryService } from '../category/category.service';
 import { CategoryCourseDto, UpdateCategoryDto } from '../category/dto';
 import { TagService } from '../tag/tag.service';
 import { CreateCourseDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto';
+import { CourseType } from 'src/constants';
 
 @Injectable()
 export class CourseService {
@@ -56,6 +58,7 @@ export class CourseService {
                'instructor',
                'level',
                'thunbnailUrl',
+               'type',
             ],
          });
          if (!foundCourse)
@@ -154,11 +157,15 @@ export class CourseService {
       }
    }
 
-   public async findByOffSet(offset: number): Promise<MessageResponse> {
+   public async findAll(offset: number, type: CourseType): Promise<MessageResponse> {
       try {
          if (offset < 1 || !offset) offset = 1;
          const limit = 10;
+         const typesQuery = type ? [type] : ['draft', 'upcoming', 'publish'];
          const listCourse = await this.courseRepo.find({
+            where: {
+               type: In(typesQuery),
+            },
             select: [
                'id',
                'title',
@@ -212,18 +219,7 @@ export class CourseService {
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
-         // check duplicate title inside found user
-         const isDuplicate = await this.isDuplicateTitleCourse(
-            createCourseDto.title,
-            foundAccount.id,
-         );
-         if (isDuplicate === true)
-            return new ErrorResponse({
-               message: 'create course failed because this title for instructor existed',
-               statusCode: HttpStatus.BAD_REQUEST,
-               metadata: {},
-            });
-         //save course
+
          const result = await this.entityManager.transaction(async (entityManager) => {
             const newCourse = new CourseEntity({
                ...createCourseDto,
@@ -348,8 +344,44 @@ export class CourseService {
       }
    }
 
+   public async updateStatusCourse(idCourse: string, type: CourseType): Promise<MessageResponse> {
+      try {
+         const foundCourse: CourseEntity = (await this.findCourseById(idCourse)).metadata;
+         if (Object.keys(foundCourse).length === 0)
+            return new ErrorResponse({
+               message: 'Cannot found this course',
+               metadata: {},
+            });
+         // const isDuplicate = await this.isDuplicateTitleCourse(foundCourse.title, idCourse);
+         // if (isDuplicate)
+         //    return new ErrorResponse({
+         //       message: 'Duplicate title course publish or upcoming',
+         //       metadata: {},
+         //       statusCode: 403,
+         //    });
+         foundCourse.type = type;
+         const result = await this.courseRepo.save(foundCourse);
+         if (result.type !== type)
+            return new ErrorResponse({
+               message: 'Update failed',
+               statusCode: 500,
+               metadata: {},
+            });
+         return new OK({
+            message: 'Update status course successfully',
+            metadata: result,
+         });
+      } catch (error) {
+         console.log(error);
+         throw new HttpExceptionFilter({
+            message: 'Error update status course',
+            error: error,
+         });
+      }
+   }
+
    public async updateCourse(
-      updateCourse: UpdateCategoryDto,
+      updateCourse: UpdateCourseDto,
       id: string,
       token: string,
    ): Promise<MessageResponse> {
@@ -430,8 +462,11 @@ export class CourseService {
                id_instructor: id_instructor,
             })
             .getOne();
-         if (foundCourse) return true;
-         return false;
+
+         return !foundCourse
+            ? false
+            : foundCourse.courses[0].type === CourseType.PUBLISH ||
+                 foundCourse.courses[0].type === CourseType.UPCOMING;
       } catch (error) {
          throw new HttpExceptionFilter({
             message: 'Check duplicate title course error',
