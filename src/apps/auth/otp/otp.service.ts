@@ -10,6 +10,8 @@ export class OtpService {
 
    public async generateAndStoreOtp(email: string): Promise<string> {
       const otp = generateOtp();
+      // clear otp cache
+      await this.redisService.delete(email);
       await this.redisService.set(email, otp, 180);
       return otp;
    }
