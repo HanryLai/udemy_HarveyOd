@@ -2,8 +2,8 @@ import { Column, Entity, Index, JoinColumn, ManyToOne, OneToOne } from 'typeorm'
 import { BaseEntity } from '../bases';
 import { ILesson } from '../interfaces';
 import { CourseModuleEntity } from './module.entity';
-import { TypeUploadEntity } from './typeUpload.entity';
 import { LessonTestEntity } from './lessonTest.entity';
+import { TypeUploadEntity } from './typeUpload.entity';
 
 @Entity({ name: 'course_lesson' })
 export class CourseLessonEntity extends BaseEntity<CourseLessonEntity> implements ILesson {
