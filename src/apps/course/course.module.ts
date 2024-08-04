@@ -7,12 +7,14 @@ import { CategoryModule } from '../category/category.module';
 import { TagModule } from '../tag/tag.module';
 import { CourseController } from './course.controller';
 import { CourseService } from './course.service';
+import { ModuleModule } from '../module/module.module';
 
 @Module({
    imports: [
-      TypeOrmModule.forFeature([CourseEntity, KeyTokenEntity, CategoryEntity]),
+      TypeOrmModule.forFeature([CourseEntity, KeyTokenEntity]),
       forwardRef(() => CategoryModule),
       forwardRef(() => TagModule),
+      forwardRef(() => ModuleModule),
    ],
    controllers: [CourseController],
    providers: [CourseService, RedisService],

@@ -10,19 +10,12 @@ import {
    UseGuards,
    UseInterceptors,
 } from '@nestjs/common';
-import {
-   ApiBody,
-   ApiFoundResponse,
-   ApiOkResponse,
-   ApiOperation,
-   ApiParam,
-   ApiTags,
-} from '@nestjs/swagger';
+import { ApiBody, ApiFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ExistToken, MessageResponse, RequestInterceptor, TokenCurrent } from 'src/common';
+import { CourseType } from 'src/constants';
 import { CategoryCourseDto, CreateCategoryDto } from '../category/dto';
 import { CourseService } from './course.service';
 import { CreateCourseDto, TagsCourseDto, UpdateCourseDto } from './dto/';
-import { CourseType } from 'src/constants';
 
 @ApiTags('Courses')
 @Controller('courses')
@@ -201,5 +194,51 @@ export class CourseController {
       @TokenCurrent() token: string,
    ): Promise<MessageResponse> {
       return await this.courseService.updateCourseTags(body.courseId, body.tagIds, token);
+   }
+
+   /**
+    * CONTROLLER: Api about module of course
+    */
+   //GET
+   @Get('/modules/:course_id')
+   @ApiOperation({ summary: 'Get list modules of course' })
+   @ApiFoundResponse({
+      schema: {
+         type: 'object',
+         properties: {
+            course_id: {
+               type: 'string',
+               example: 'b76591d8-dc2a-48ac-ab41-325ffd6336fe',
+               description: 'Id of course need get list module',
+            },
+            listModules: {
+               type: 'array',
+               items: {
+                  type: 'object',
+                  properties: {
+                     id: {
+                        type: 'string',
+                        example: 'b76591d8-dc2a-48ac-ab41-325ffd6336fe',
+                        description: 'Id of module',
+                     },
+                     title: {
+                        type: 'string',
+                        example: 'Module 1',
+                        description: 'Title of module',
+                     },
+                     description: {
+                        type: 'string',
+                        example: 'Description of module 1',
+                        description: 'Description of module',
+                     },
+                  },
+               },
+            },
+         },
+         description: 'Found list modules',
+      },
+   })
+   public async getModuleOfCourse(@Param('course_id') id: string): Promise<MessageResponse> {
+      return await this.courseService.findModuleOfCourse(id);
    }
 }

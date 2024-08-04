@@ -5,7 +5,7 @@ import { RedisService } from 'src/common/redis/redis.service';
 import { CourseType } from 'src/constants';
 import { AccountEntity } from 'src/entities/accounts';
 import { KeyTokenEntity } from 'src/entities/auth';
-import { CourseEntity, TagEntity } from 'src/entities/courses';
+import { CourseEntity, CourseModuleEntity, TagEntity } from 'src/entities/courses';
 import { KeyTokenRepository } from 'src/repositories/auth';
 import { CourseRepository } from 'src/repositories/courses';
 import { EntityManager, In } from 'typeorm';
@@ -14,6 +14,7 @@ import { CategoryCourseDto } from '../category/dto';
 import { TagService } from '../tag/tag.service';
 import { UpdateCourseDto } from './dto';
 import { CreateCourseDto } from './dto/create-course.dto';
+import { ModuleService } from '../module/module.service';
 
 @Injectable()
 export class CourseService {
@@ -25,6 +26,8 @@ export class CourseService {
       private categoryService: CategoryService,
       @Inject(forwardRef(() => TagService))
       private tagService: TagService,
+      @Inject(forwardRef(() => TagService))
+      private moduleService: ModuleService,
 
       private entityManager: EntityManager,
       private redisService: RedisService,
@@ -72,7 +75,8 @@ export class CourseService {
                metadata: {},
             });
 
-         await this.redisService.set('course:' + foundCourse.id, { ...foundCourse }, 60 * 30);
+         if (foundCourse.type === CourseType.PUBLISH)
+            await this.redisService.set('course:' + foundCourse.id, { ...foundCourse }, 60 * 30);
 
          return new OK({
             message: 'Found course',
@@ -631,5 +635,71 @@ export class CourseService {
       }
    }
 
-   public async isOwnerCourse(id_Course: string, id_Account: string) {}
+   /**
+    * SERVICE: handle about module of course
+    */
+   public async findModuleOfCourse(idCourse: string): Promise<MessageResponse> {
+      try {
+         const foundCourse = await this.courseRepo.findOne({
+            where: {
+               id: idCourse,
+            },
+            relations: ['modules'],
+            select: ['modules', 'id'],
+         });
+         if (!foundCourse)
+            return new ErrorResponse({
+               message: 'This course not exist',
+               metadata: {},
+               statusCode: 404,
+            });
+         if (foundCourse.modules.length === 0)
+            return new ErrorResponse({
+               message: 'Not exist any module',
+               metadata: {},
+               statusCode: 404,
+            });
+         return new OK({
+            message: 'Found module by course successfully',
+            metadata: foundCourse,
+         });
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Find module of course failed',
+            error: error,
+         });
+      }
+   }
+
+   // result = this.courseService.addModuleToCourse(idCourse, module);
+   // public async addModuleToCourse(
+   //    idCourse: string,
+   //    module: CourseModuleEntity,
+   // ): Promise<MessageResponse> {
+   //    try {
+   //       const foundCourse = await this.courseRepo.findOne({
+   //          where: {
+   //             id: idCourse,
+   //          },
+   //          relations: ['modules'],
+   //       });
+   //       if (!foundCourse)
+   //          return new ErrorResponse({
+   //             message: 'This course not exist',
+   //             metadata: {},
+   //             statusCode: 404,
+   //          });
+   //       foundCourse.modules.push(module);
+   //       const result = await this.courseRepo.save(foundCourse);
+   //       return new OK({
+   //          message: 'Add module to course successfully',
+   //          metadata: result,
+   //       });
+   //    } catch (error) {
+   //       throw new HttpExceptionFilter({
+   //          message: 'Add module to course failed',
+   //          error: error,
+   //       });
+   //    }
+   // }
 }
