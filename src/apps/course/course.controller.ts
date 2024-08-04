@@ -60,15 +60,21 @@ export class CourseController {
    @Get('')
    @ApiOperation({ summary: 'Get courses' })
    @ApiFoundResponse({ description: 'Found  courses' })
-   @ApiParam({
-      name: 'type',
-   })
    @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
-   public async getCourseByOffSet(
+   public async getCoursePublish(@Query('page') offset: number): Promise<MessageResponse> {
+      return await this.courseService.findAllPublish(offset);
+   }
+
+   //GET
+   @Get('owner')
+   @ApiOperation({ summary: 'Get courses' })
+   @ApiFoundResponse({ description: 'Found  courses' })
+   @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
+   public async getCourseOfOwner(
       @Query('page') offset: number,
       @Query('type') type: CourseType,
    ): Promise<MessageResponse> {
-      return await this.courseService.findAll(offset, type);
+      return await this.courseService.findAllOwner(offset, type);
    }
 
    // POST

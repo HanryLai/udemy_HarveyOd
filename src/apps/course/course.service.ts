@@ -157,7 +157,58 @@ export class CourseService {
       }
    }
 
-   public async findAll(offset: number, type: CourseType): Promise<MessageResponse> {
+   public async findAllPublish(offset: number): Promise<MessageResponse> {
+      try {
+         if (offset < 1 || !offset) offset = 1;
+         const limit = 10;
+         const typesQuery = ['publish'];
+         const listCourse = await this.courseRepo.find({
+            where: {
+               type: In(typesQuery),
+            },
+            select: [
+               'id',
+               'title',
+               'description',
+               'language',
+               'price',
+               'discount',
+               'instructor',
+               'level',
+               'thunbnailUrl',
+            ],
+            skip: limit * (offset - 1),
+            take: limit,
+         });
+
+         const totalCourse = (await this.courseRepo.count()) / limit;
+
+         if (listCourse.length === 0)
+            return new ErrorResponse({
+               message: 'Not have any courses',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+
+         return new OK({
+            message: 'Found list course in offset ' + offset,
+            metadata: {
+               courses: listCourse,
+               offset: offset,
+               limit: limit,
+               totalPage: Math.ceil(totalCourse),
+               totalCourseOfPage: listCourse.length,
+            },
+         });
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Find course with offset failed',
+            error: error,
+         });
+      }
+   }
+
+   public async findAllOwner(offset: number, type: CourseType): Promise<MessageResponse> {
       try {
          if (offset < 1 || !offset) offset = 1;
          const limit = 10;
