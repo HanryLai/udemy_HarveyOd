@@ -1,7 +1,7 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../bases';
 import { ICourseContentEntity } from '../interfaces';
-import { ProgresDetailsEntity } from './progresDetail.entity';
+
 import { CourseEntity } from './course.entity';
 
 @Entity({ name: 'course_content' })
@@ -20,9 +20,6 @@ export class CourseContentEntity
 
    @Column({ type: 'int', name: 'order_index' })
    orderIndex: number;
-
-   @OneToMany(() => ProgresDetailsEntity, (progresDetail) => progresDetail.content)
-   details: ProgresDetailsEntity[];
 
    @ManyToOne(() => CourseEntity, (course) => course.contents)
    course: CourseEntity;

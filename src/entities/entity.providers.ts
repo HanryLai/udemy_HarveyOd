@@ -16,10 +16,10 @@ import {
    SubmissionEntity,
    CouponEntity,
    TagEntity,
-   LessonTestEntity,
    TypeUploadEntity,
+   LessonTestEntity,
+   InteractionEntity,
 } from './courses';
-import { InteractionEntity } from './courses/interaction.entity';
 
 export const entities = [
    AccountEntity,
@@ -44,6 +44,6 @@ export const entities = [
    CouponEntity,
    TagEntity,
    InteractionEntity,
-   LessonTestEntity,
    TypeUploadEntity,
+   LessonTestEntity,
 ];

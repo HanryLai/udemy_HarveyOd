@@ -1,13 +1,17 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
-import { LoggerMiddleware } from './middlewares/Logger.middleware';
-import { PostgresDatabaseModule } from './common/databases/postgres/data.module';
+import { LoggerMiddleware } from './middlewares';
+import { PostgresDatabaseModule } from './common';
 import { AuthModule } from './apps/auth/auth.module';
 import { CourseModule } from './apps/course/course.module';
 import { CategoryModule } from './apps/category/category.module';
 import { TagModule } from './apps/tag/tag.module';
 import { ModuleModule } from './apps/module/module.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+
+import { LoggersModule } from './loggers/loggers.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
    imports: [
@@ -24,6 +28,21 @@ import { ModuleModule } from './apps/module/module.module';
             abortEarly: true,
          },
       }),
+      ThrottlerModule.forRoot([
+         {
+            ttl: 60 * 60,
+            limit: 1000,
+         },
+      ]),
+      BullModule.forRootAsync({
+         useFactory: (configService: ConfigService) => ({
+            redis: {
+               host: configService.get('REDIS_HOST'),
+               port: configService.get('REDIS_PORT'),
+            },
+         }),
+         inject: [ConfigService],
+      }),
 
       PostgresDatabaseModule,
       AuthModule,
@@ -31,9 +50,15 @@ import { ModuleModule } from './apps/module/module.module';
       CategoryModule,
       TagModule,
       ModuleModule,
+      LoggersModule,
    ],
    controllers: [],
-   providers: [],
+   providers: [
+      {
+         provide: 'APP_GUARD',
+         useClass: ThrottlerModule,
+      },
+   ],
 })
 export class AppModule implements NestModule {
    configure(consumer: MiddlewareConsumer) {

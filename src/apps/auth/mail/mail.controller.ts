@@ -5,12 +5,14 @@ import { MessageResponse, OK } from 'src/common';
 import { ValidOtp } from './dto/vaild-otp.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { MailService } from './mail.service';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Mail')
 @Controller('mail')
 export class MailController {
    constructor(private readonly mailService: MailService) {}
 
+   @Throttle({ default: { limit: 5, ttl: 60000 } })
    @HttpCode(HttpStatus.OK)
    @Post('valid-otp')
    @ApiOperation({ summary: 'Validate OTP' })
@@ -23,7 +25,7 @@ export class MailController {
          metadata: {},
       });
    }
-
+   @Throttle({ default: { limit: 2, ttl: 180000 } })
    @HttpCode(HttpStatus.OK)
    @Post('send-new-otp')
    @ApiOperation({ summary: 'Request to send a new OTP' })

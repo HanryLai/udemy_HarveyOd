@@ -5,7 +5,6 @@ import { CourseEntity } from '../courses/course.entity';
 import { AccountEntity } from '../accounts/account.entity';
 import { ProgresDetailsEntity } from './progresDetail.entity';
 
-
 @Entity({ name: 'course_progress' })
 export class CourseProgressEntity
    extends BaseEntity<CourseProgressEntity>
@@ -29,8 +28,6 @@ export class CourseProgressEntity
    @ManyToOne(() => AccountEntity, (account) => account.progress)
    account: AccountEntity;
 
-   @OneToMany(() => ProgresDetailsEntity,  progres => progres.progres)
+   @OneToMany(() => ProgresDetailsEntity, (progres) => progres.progres)
    details: ProgresDetailsEntity[];
-
-   
 }

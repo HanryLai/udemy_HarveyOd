@@ -188,6 +188,18 @@ export class AuthService {
             });
          }
 
+         // check verify account
+         if (!account.isVerified) {
+            const otp = await this.otpService.generateAndStoreOtp(account.email);
+            // send mail
+            await this.mailService.sendOTPEmail(account.username, account.email, otp);
+            return new ErrorResponse({
+               message: 'Account not verified',
+               statusCode: HttpStatus.UNAUTHORIZED,
+               metadata: {},
+            });
+         }
+
          // update last login
          const generateKey = await this.keyTokenService.createNewToken({
             id: account.id,
@@ -283,7 +295,7 @@ export class AuthService {
             where: [{ username: registerDto.username }, { email: registerDto.email }],
             // select: { id: true, username: true, password: true, email: true, isVerified: true },
          });
-         
+
          if (foundAccount) {
             return new ErrorResponse({
                message: 'Account already exists',
@@ -302,11 +314,7 @@ export class AuthService {
          });
 
          const saveAccount = await this.entityManager.save(newAccount);
-         // set OTP
-         const otp = await this.otpService.generateAndStoreOtp(saveAccount.email);
 
-         // send mail
-         await this.mailService.sendOTPEmail(saveAccount.username, saveAccount.email, otp);
          return new OK({
             message: 'Account created successfully',
             metadata: saveAccount,

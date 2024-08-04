@@ -1,19 +1,21 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '../bases';
-import { ILessonTestEntity } from '../interfaces';
+
 import { CourseLessonEntity } from './lesson.entity';
+import { ILessonTest } from '../interfaces';
 
-@Entity({ name: 'lesson_test' })
-export class LessonTestEntity extends BaseEntity<LessonTestEntity> implements ILessonTestEntity {
-   @Column({ type: 'varchar', name: 'question_text' })
-   questionText: string;
+@Entity({ name: 'lesson_tests' })
+export class LessonTestEntity extends BaseEntity<LessonTestEntity> implements ILessonTest {
+   @Column({ name: 'question', type: 'text', default: '' })
+   question: string;
 
-   @Column({ array: true, type: 'text', name: 'options' })
+   @Column({ array: true, name: 'options', type: 'text' })
    options: string[];
 
-   @Column({ type: 'varchar', name: 'correct_option' })
-   correctOption: string;
-   @Column({ type: 'varchar', name: 'url_audio' })
+   @Column({ name: 'correct_answer', type: 'text', default: '' })
+   correctAnswer: string;
+
+   @Column({ name: 'url_audio', type: 'text', default: '' })
    urlAudio: string;
 
    @OneToMany(() => CourseLessonEntity, (lesson) => lesson.lessonTest)

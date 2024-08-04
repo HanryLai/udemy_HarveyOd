@@ -1,8 +1,8 @@
 import { IBaseEntity } from './base.entity.interface';
 
-export interface ILessonTestEntity extends IBaseEntity {
-   questionText: string;
+export interface ILessonTest extends IBaseEntity {
+   question: string;
    options: string[];
-   correctOption: string;
+   correctAnswer: string;
    urlAudio: string;
 }

@@ -10,7 +10,13 @@ import { OtpModule } from './otp/otp.module';
 import { SessionsModule } from './sessions/sessions.module';
 
 @Module({
-   imports: [TypeOrmModule.forFeature([AccountEntity]), MailModule, KeytokenModule, OtpModule, SessionsModule],
+   imports: [
+      TypeOrmModule.forFeature([AccountEntity]),
+      MailModule,
+      KeytokenModule,
+      OtpModule,
+      SessionsModule,
+   ],
    providers: [AuthService],
    controllers: [AuthController],
 })

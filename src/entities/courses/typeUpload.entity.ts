@@ -1,19 +1,18 @@
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity } from 'typeorm';
 import { BaseEntity } from '../bases';
-import { ITypeUploadEntity } from '../interfaces';
-import { CourseLessonEntity } from './lesson.entity';
+import { ITypeUpload } from '../interfaces';
 
-@Entity({ name: 'type_upload' })
-export class TypeUploadEntity extends BaseEntity<TypeUploadEntity> implements ITypeUploadEntity {
-   @Column({ array: true, type: 'text', name: 'type' })
-   type: string[];
-   @Column({ type: 'varchar', name: 'description' })
+@Entity({ name: 'type_uploads' })
+export class TypeUploadEntity extends BaseEntity<TypeUploadEntity> implements ITypeUpload {
+   @Column({ name: 'type', type: 'varchar', default: '' })
+   type: string;
+
+   @Column({ name: 'description', type: 'text', default: '' })
    description: string;
-   @Column({ type: 'varchar', name: 'url' })
-   url: string;
-   @Column({ type: 'int', name: 'duration' })
-   duration: number;
 
-   @OneToMany(() => CourseLessonEntity, (lesson) => lesson.typeUpload)
-   lessons: CourseLessonEntity[];
+   @Column({ name: 'url', type: 'text', default: '' })
+   url: string;
+
+   @Column({ name: 'duration', type: 'int', default: 0 })
+   duration: number;
 }

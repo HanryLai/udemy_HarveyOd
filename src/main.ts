@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 
+
 async function bootstrap() {
    const app = await NestFactory.create(AppModule);
    app.useGlobalPipes(
@@ -15,12 +16,11 @@ async function bootstrap() {
    );
 
    app.use(helmet());
-
+   app.useGlobalGuards();
    app.enableCors();
 
    const globalPrefix = 'api';
    app.setGlobalPrefix(globalPrefix);
-
 
    const configSwagger = new DocumentBuilder()
       .setTitle('API Products')
@@ -32,7 +32,6 @@ async function bootstrap() {
    SwaggerModule.setup('api', app, document);
 
    const configService = app.get(ConfigService);
-
 
    const port = configService.get<string>('PORT') || 3000;
    await app.listen(port, () => {
