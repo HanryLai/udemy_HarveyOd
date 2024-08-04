@@ -437,13 +437,29 @@ export class CourseService {
       }
    }
 
-   public async updateCourseTags(idCourse: string, listIdTags: string[]): Promise<MessageResponse> {
+   public async updateCourseTags(
+      idCourse: string,
+      listIdTags: string[],
+      token: string,
+   ): Promise<MessageResponse> {
       try {
+         const foundAccount = await this.findAccountByToken(token);
+         //check account
+         if (!foundAccount)
+            return new ErrorResponse({
+               message: 'cannot found account',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+
          const courseFound = await this.courseRepo.findOne({
             where: {
                id: idCourse,
+               instructor: {
+                  id: foundAccount.id,
+               },
             },
-            relations: ['tags'],
+            relations: ['tags', 'instructor'],
          });
          if (listIdTags.length === 0) {
             courseFound.tags = [];
@@ -453,7 +469,7 @@ export class CourseService {
                metadata: result,
             });
          }
-         if (Object.entries(courseFound).length === 0)
+         if (!courseFound)
             return new ErrorResponse({
                message: 'Cannot found this course',
                statusCode: HttpStatus.BAD_REQUEST,

@@ -170,6 +170,8 @@ export class CourseController {
    }
 
    //PUT
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
    @Put('course/tags')
    @ApiOperation({ summary: 'Add tags to course' })
    @ApiOkResponse({ description: 'Add tags to course successfully' })
@@ -194,7 +196,10 @@ export class CourseController {
          },
       },
    })
-   public async updateCourseTags(@Body() body: TagsCourseDto): Promise<MessageResponse> {
-      return await this.courseService.updateCourseTags(body.courseId, body.tagIds);
+   public async updateCourseTags(
+      @Body() body: TagsCourseDto,
+      @TokenCurrent() token: string,
+   ): Promise<MessageResponse> {
+      return await this.courseService.updateCourseTags(body.courseId, body.tagIds, token);
    }
 }
