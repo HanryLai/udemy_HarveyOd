@@ -25,4 +25,4 @@ export * from './review.entity.interface';
 export * from './role.entity.interface';
 export * from './session.entity.interface';
 export * from './typeUpload.entity.interface';
-export * from './lessionTest.entity.interface';
+export * from './lessonTest.entity.interface';

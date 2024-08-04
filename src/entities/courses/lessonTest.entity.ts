@@ -1,10 +1,11 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '../bases';
-import { ILessionTest } from '../interfaces';
-import { CourseLessonEntity } from './lesson.entity';
 
-@Entity({ name: 'lession_tests' })
-export class LessionTestEntity extends BaseEntity<LessionTestEntity> implements ILessionTest {
+import { CourseLessonEntity } from './lesson.entity';
+import { ILessonTest } from '../interfaces';
+
+@Entity({ name: 'lesson_tests' })
+export class LessonTestEntity extends BaseEntity<LessonTestEntity> implements ILessonTest {
    @Column({ name: 'question', type: 'text', default: '' })
    question: string;
 

@@ -3,7 +3,7 @@ import { BaseEntity } from '../bases';
 import { ILesson } from '../interfaces';
 import { CourseModuleEntity } from './module.entity';
 import { TypeUploadEntity } from './typeUpload.entity';
-import { LessionTestEntity } from './lessionTest.entity';
+import { LessonTestEntity } from './lessonTest.entity';
 
 
 @Entity({ name: 'course_lesson' })
@@ -31,8 +31,8 @@ export class CourseLessonEntity extends BaseEntity<CourseLessonEntity> implement
    @JoinColumn()
    typeUpload: TypeUploadEntity;
 
-   @ManyToOne(() => LessionTestEntity, (lesson) => lesson.lessons)
-   lessonTest: LessionTestEntity;
+   @ManyToOne(() => LessonTestEntity, (lesson) => lesson.lessons)
+   lessonTest: LessonTestEntity;
 
    
 }

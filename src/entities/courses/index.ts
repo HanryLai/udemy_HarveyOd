@@ -15,4 +15,4 @@ export * from './coupon.entity';
 export * from './tag.entity';
 export * from './interaction.entity';
 export * from './typeUpload.entity';
-export * from './lessionTest.entity';
+export * from './lessonTest.entity';

@@ -1,6 +1,6 @@
 import { IBaseEntity } from './base.entity.interface';
 
-export interface ILessionTest extends IBaseEntity {
+export interface ILessonTest extends IBaseEntity {
    question: string;
    options: string[];
    correctAnswer: string;
