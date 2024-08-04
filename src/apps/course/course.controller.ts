@@ -66,6 +66,8 @@ export class CourseController {
    }
 
    //GET
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
    @Get('owner')
    @ApiOperation({ summary: 'Get courses' })
    @ApiFoundResponse({ description: 'Found  courses' })
@@ -73,8 +75,9 @@ export class CourseController {
    public async getCourseOfOwner(
       @Query('page') offset: number,
       @Query('type') type: CourseType,
+      @TokenCurrent() token: string,
    ): Promise<MessageResponse> {
-      return await this.courseService.findAllOwner(offset, type);
+      return await this.courseService.findAllOwner(offset, type, token);
    }
 
    // POST

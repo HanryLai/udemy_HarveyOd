@@ -208,15 +208,29 @@ export class CourseService {
       }
    }
 
-   public async findAllOwner(offset: number, type: CourseType): Promise<MessageResponse> {
+   public async findAllOwner(
+      offset: number,
+      type: CourseType,
+      token: string,
+   ): Promise<MessageResponse> {
       try {
+         const owner = await this.findAccountByToken(token);
+         if (!owner)
+            return new ErrorResponse({
+               message: 'Cannot find owner',
+               metadata: {},
+            });
          if (offset < 1 || !offset) offset = 1;
          const limit = 10;
          const typesQuery = type ? [type] : ['draft', 'upcoming', 'publish'];
          const listCourse = await this.courseRepo.find({
             where: {
                type: In(typesQuery),
+               instructor: {
+                  id: owner.id,
+               },
             },
+            relations: ['instructor'],
             select: [
                'id',
                'title',
