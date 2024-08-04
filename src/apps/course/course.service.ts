@@ -2,6 +2,7 @@ import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { RedisService } from 'src/common/redis/redis.service';
+import { CourseType } from 'src/constants';
 import { AccountEntity } from 'src/entities/accounts';
 import { KeyTokenEntity } from 'src/entities/auth';
 import { CourseEntity, TagEntity } from 'src/entities/courses';
@@ -9,11 +10,10 @@ import { KeyTokenRepository } from 'src/repositories/auth';
 import { CourseRepository } from 'src/repositories/courses';
 import { EntityManager, In } from 'typeorm';
 import { CategoryService } from '../category/category.service';
-import { CategoryCourseDto, UpdateCategoryDto } from '../category/dto';
+import { CategoryCourseDto } from '../category/dto';
 import { TagService } from '../tag/tag.service';
-import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto';
-import { CourseType } from 'src/constants';
+import { CreateCourseDto } from './dto/create-course.dto';
 
 @Injectable()
 export class CourseService {
@@ -403,7 +403,13 @@ export class CourseService {
                metadata: {},
             });
 
-         const foundCourse = (await this.findCourseById(categoryCourse.courseId)).metadata;
+         const foundCourse = (await this.findOwnerCourseById(categoryCourse.courseId, token))
+            .metadata;
+         if (Object.keys(foundCourse).length === 0)
+            return new ErrorResponse({
+               message: "You aren't owner of this course",
+               metadata: {},
+            });
          const listCategoryEntity = await this.categoryService.getListCategory(
             categoryCourse.categoryIds,
          );
@@ -423,6 +429,7 @@ export class CourseService {
             },
          });
       } catch (error) {
+         console.log(error);
          throw new HttpExceptionFilter({
             message: 'Add categoryCourse failed',
             error: error,
@@ -607,4 +614,6 @@ export class CourseService {
          });
       }
    }
+
+   public async isOwnerCourse(id_Course: string, id_Account: string) {}
 }
