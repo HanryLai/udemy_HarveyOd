@@ -45,9 +45,77 @@ export class CourseService {
                message: 'Found course redis',
                metadata: foundRedis,
             });
+         const queryType = [CourseType.PUBLISH, CourseType.UPCOMING];
          //find on database
          const foundCourse = await this.courseRepo.findOne({
-            where: { id },
+            where: {
+               id: id,
+               type: In(queryType),
+            },
+            select: [
+               'id',
+               'title',
+               'description',
+               'language',
+               'price',
+               'discount',
+               'instructor',
+               'level',
+               'thunbnailUrl',
+               'type',
+            ],
+         });
+         if (!foundCourse)
+            return new ErrorResponse({
+               message: 'this course not exist',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+
+         await this.redisService.set('course:' + foundCourse.id, { ...foundCourse }, 60 * 30);
+
+         return new OK({
+            message: 'Found course',
+            metadata: foundCourse,
+         });
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'find course failed',
+            error: error,
+         });
+      }
+   }
+
+   public async findOwnerCourseById(id: string, token: string): Promise<MessageResponse> {
+      try {
+         if (!id.trim())
+            return new ErrorResponse({
+               message: 'Id course not valid',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+         const owner = await this.findAccountByToken(token);
+         if (!owner)
+            return new ErrorResponse({
+               message: 'Cannot find owner',
+               metadata: {},
+            });
+         //check on redis
+         const foundRedis = await this.redisService.get<CourseEntity>('course:' + id);
+         if (foundRedis)
+            return new OK({
+               message: 'Found course redis',
+               metadata: foundRedis,
+            });
+         //find on database
+         const foundCourse = await this.courseRepo.findOne({
+            where: {
+               id: id,
+               instructor: {
+                  id: owner.id,
+               },
+            },
+            relations: ['instructor'],
             select: [
                'id',
                'title',

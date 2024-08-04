@@ -39,6 +39,20 @@ export class CourseController {
    }
 
    //GET
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
+   @Get('/owner/course/:course_id')
+   @ApiOperation({ summary: 'Get course by id' })
+   @ApiFoundResponse({ description: 'Found this course' })
+   @ApiBody({ type: CreateCourseDto, description: 'About information of course' })
+   public async getCourseOwnerById(
+      @Param('course_id') id: string,
+      @TokenCurrent() token: string,
+   ): Promise<MessageResponse> {
+      return await this.courseService.findOwnerCourseById(id, token);
+   }
+
+   //GET
    @Get('/categories/:course_id')
    @ApiOperation({ summary: 'Get list categories of course' })
    @ApiFoundResponse({ description: 'Found list categories' })
