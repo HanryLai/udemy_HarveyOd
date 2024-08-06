@@ -122,6 +122,8 @@ export class CourseController {
    }
 
    //PATCH
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
    @Patch('course/status/:id_course')
    @ApiOperation({ summary: 'Update status course' })
    @ApiOkResponse({ description: 'Update status course successfully' })
@@ -139,9 +141,10 @@ export class CourseController {
    })
    public async UpdateStatusCourse(
       @Body() body: any,
+      @TokenCurrent() token: string,
       @Param('id_course') id: string,
    ): Promise<MessageResponse> {
-      return await this.courseService.updateStatusCourse(id, body.type);
+      return await this.courseService.updateStatusCourse(id, body.type, token);
    }
 
    //PUT
@@ -238,7 +241,54 @@ export class CourseController {
          description: 'Found list modules',
       },
    })
-   public async getModuleOfCourse(@Param('course_id') id: string): Promise<MessageResponse> {
-      return await this.courseService.findModuleOfCourse(id);
+   public async getModulesOfCourse(@Param('course_id') id: string): Promise<MessageResponse> {
+      return await this.courseService.findModulesOfCourse(id);
+   }
+
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
+   @Get('/owner/modules/:course_id')
+   @ApiOperation({ summary: 'Get list modules of course' })
+   @ApiFoundResponse({
+      schema: {
+         type: 'object',
+         properties: {
+            course_id: {
+               type: 'string',
+               example: 'b76591d8-dc2a-48ac-ab41-325ffd6336fe',
+               description: 'Id of course need get list module',
+            },
+            listModules: {
+               type: 'array',
+               items: {
+                  type: 'object',
+                  properties: {
+                     id: {
+                        type: 'string',
+                        example: 'b76591d8-dc2a-48ac-ab41-325ffd6336fe',
+                        description: 'Id of module',
+                     },
+                     title: {
+                        type: 'string',
+                        example: 'Module 1',
+                        description: 'Title of module',
+                     },
+                     description: {
+                        type: 'string',
+                        example: 'Description of module 1',
+                        description: 'Description of module',
+                     },
+                  },
+               },
+            },
+         },
+         description: 'Found list modules',
+      },
+   })
+   public async findOwnerModulesOfCourse(
+      @Param('course_id') id: string,
+      @TokenCurrent() token: string,
+   ): Promise<MessageResponse> {
+      return await this.courseService.findOwnerModulesOfCourse(id, token);
    }
 }

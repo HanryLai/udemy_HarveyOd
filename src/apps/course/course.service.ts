@@ -43,7 +43,7 @@ export class CourseService {
             });
          //check on redis
          const foundRedis = await this.redisService.get<CourseEntity>('course:' + id);
-         if (foundRedis)
+         if (foundRedis && foundRedis.type === CourseType.PUBLISH)
             return new OK({
                message: 'Found course redis',
                metadata: foundRedis,
@@ -106,7 +106,7 @@ export class CourseService {
             });
          //check on redis
          const foundRedis = await this.redisService.get<CourseEntity>('course:' + id);
-         if (foundRedis)
+         if (foundRedis && foundRedis.instructor.id === owner.id)
             return new OK({
                message: 'Found course redis',
                metadata: foundRedis,
@@ -221,7 +221,6 @@ export class CourseService {
             metadata: courseTags,
          });
       } catch (error) {
-         console.log(error);
          throw new HttpExceptionFilter({
             message: 'Find tags by course id failed',
             error: error,
@@ -433,7 +432,6 @@ export class CourseService {
             },
          });
       } catch (error) {
-         console.log(error);
          throw new HttpExceptionFilter({
             message: 'Add categoryCourse failed',
             error: error,
@@ -447,14 +445,10 @@ export class CourseService {
       token: string,
    ): Promise<MessageResponse> {
       try {
-         const foundAccount = await this.findAccountByToken(token);
          //check account
-         if (!foundAccount)
-            return new ErrorResponse({
-               message: 'cannot found account',
-               statusCode: HttpStatus.BAD_REQUEST,
-               metadata: {},
-            });
+         let foundAccount = await this.checkAccount(token);
+         if (foundAccount instanceof ErrorResponse) return foundAccount;
+         foundAccount = foundAccount as AccountEntity;
 
          const courseFound = await this.courseRepo.findOne({
             where: {
@@ -499,26 +493,30 @@ export class CourseService {
             });
          }
       } catch (error) {
-         console.log(error);
          throw new HttpExceptionFilter({ message: 'Error add tags to course', error: error });
       }
    }
 
-   public async updateStatusCourse(idCourse: string, type: CourseType): Promise<MessageResponse> {
+   public async updateStatusCourse(
+      idCourse: string,
+      type: CourseType,
+      token: string,
+   ): Promise<MessageResponse> {
       try {
-         const foundCourse: CourseEntity = (await this.findCourseById(idCourse)).metadata;
+         const foundCourse: CourseEntity = (await this.findOwnerCourseById(idCourse, token))
+            .metadata;
          if (Object.keys(foundCourse).length === 0)
             return new ErrorResponse({
                message: 'Cannot found this course',
                metadata: {},
             });
-         // const isDuplicate = await this.isDuplicateTitleCourse(foundCourse.title, idCourse);
-         // if (isDuplicate)
-         //    return new ErrorResponse({
-         //       message: 'Duplicate title course publish or upcoming',
-         //       metadata: {},
-         //       statusCode: 403,
-         //    });
+         const isDuplicate = await this.isDuplicateTitleCourse(foundCourse.title, idCourse);
+         if (isDuplicate)
+            return new ErrorResponse({
+               message: 'Duplicate title course publish or upcoming',
+               metadata: {},
+               statusCode: 403,
+            });
          foundCourse.type = type;
          const result = await this.courseRepo.save(foundCourse);
          if (result.type !== type)
@@ -532,7 +530,6 @@ export class CourseService {
             metadata: result,
          });
       } catch (error) {
-         console.log(error);
          throw new HttpExceptionFilter({
             message: 'Error update status course',
             error: error,
@@ -546,14 +543,10 @@ export class CourseService {
       token: string,
    ): Promise<MessageResponse> {
       try {
-         const foundAccount = await this.findAccountByToken(token);
          //check account
-         if (!foundAccount)
-            return new ErrorResponse({
-               message: 'Cannot found account ',
-               statusCode: HttpStatus.BAD_REQUEST,
-               metadata: {},
-            });
+         let foundAccount = await this.checkAccount(token);
+         if (foundAccount instanceof ErrorResponse) return foundAccount;
+         foundAccount = foundAccount as AccountEntity;
 
          const updateResult = await this.entityManager
             .createQueryBuilder()
@@ -638,11 +631,15 @@ export class CourseService {
    /**
     * SERVICE: handle about module of course
     */
-   public async findModuleOfCourse(idCourse: string): Promise<MessageResponse> {
+   public async findModulesOfCourse(idCourse: string): Promise<MessageResponse> {
       try {
          const foundCourse = await this.courseRepo.findOne({
             where: {
                id: idCourse,
+               type: CourseType.PUBLISH,
+               modules: {
+                  isPublished: true,
+               },
             },
             relations: ['modules'],
             select: ['modules', 'id'],
@@ -671,35 +668,68 @@ export class CourseService {
       }
    }
 
-   // result = this.courseService.addModuleToCourse(idCourse, module);
-   // public async addModuleToCourse(
-   //    idCourse: string,
-   //    module: CourseModuleEntity,
-   // ): Promise<MessageResponse> {
-   //    try {
-   //       const foundCourse = await this.courseRepo.findOne({
-   //          where: {
-   //             id: idCourse,
-   //          },
-   //          relations: ['modules'],
-   //       });
-   //       if (!foundCourse)
-   //          return new ErrorResponse({
-   //             message: 'This course not exist',
-   //             metadata: {},
-   //             statusCode: 404,
-   //          });
-   //       foundCourse.modules.push(module);
-   //       const result = await this.courseRepo.save(foundCourse);
-   //       return new OK({
-   //          message: 'Add module to course successfully',
-   //          metadata: result,
-   //       });
-   //    } catch (error) {
-   //       throw new HttpExceptionFilter({
-   //          message: 'Add module to course failed',
-   //          error: error,
-   //       });
-   //    }
-   // }
+   public async findOwnerModulesOfCourse(
+      idCourse: string,
+      token: string,
+   ): Promise<MessageResponse> {
+      try {
+         //check account
+         let foundAccount = await this.checkAccount(token);
+         if (foundAccount instanceof ErrorResponse) return foundAccount;
+         foundAccount = foundAccount as AccountEntity;
+
+         const foundCourse = await this.courseRepo.findOne({
+            where: {
+               id: idCourse,
+               instructor: {
+                  id: foundAccount.id,
+               },
+            },
+            relations: ['instructor', 'modules'],
+            select: ['modules', 'id'],
+         });
+         if (!foundCourse)
+            return new ErrorResponse({
+               message: 'This course not exist',
+               metadata: {},
+               statusCode: 404,
+            });
+         if (foundCourse.modules.length === 0)
+            return new ErrorResponse({
+               message: 'Not exist any module',
+               metadata: {},
+               statusCode: 404,
+            });
+         return new OK({
+            message: 'Found module by course successfully',
+            metadata: foundCourse,
+         });
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Find module of course failed',
+            error: error,
+         });
+      }
+   }
+
+   /**
+    * Error: Cannot found account
+    */
+   public async checkAccount(token: string): Promise<MessageResponse | AccountEntity> {
+      try {
+         const foundAccount = await this.findAccountByToken(token);
+         return !foundAccount
+            ? new ErrorResponse({
+                 message: 'Cannot found account',
+                 statusCode: HttpStatus.BAD_REQUEST,
+                 metadata: {},
+              })
+            : foundAccount;
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Error check account',
+            error: error,
+         });
+      }
+   }
 }
