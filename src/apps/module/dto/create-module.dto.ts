@@ -12,11 +12,6 @@ export class CreateModuleDto {
    description: string;
 
    @ApiProperty()
-   @IsNumber()
-   @IsNotEmpty()
-   orderIndex: number;
-
-   @ApiProperty()
    @IsNotEmpty()
    @IsBoolean()
    isPublished: boolean;

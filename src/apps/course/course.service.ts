@@ -5,16 +5,16 @@ import { RedisService } from 'src/common/redis/redis.service';
 import { CourseType } from 'src/constants';
 import { AccountEntity } from 'src/entities/accounts';
 import { KeyTokenEntity } from 'src/entities/auth';
-import { CourseEntity, CourseModuleEntity, TagEntity } from 'src/entities/courses';
+import { CourseEntity, TagEntity } from 'src/entities/courses';
 import { KeyTokenRepository } from 'src/repositories/auth';
 import { CourseRepository } from 'src/repositories/courses';
 import { EntityManager, In } from 'typeorm';
 import { CategoryService } from '../category/category.service';
 import { CategoryCourseDto } from '../category/dto';
+import { ModuleService } from '../module/module.service';
 import { TagService } from '../tag/tag.service';
 import { UpdateCourseDto } from './dto';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { ModuleService } from '../module/module.service';
 
 @Injectable()
 export class CourseService {
@@ -646,7 +646,7 @@ export class CourseService {
          });
          if (!foundCourse)
             return new ErrorResponse({
-               message: 'This course not exist',
+               message: 'This course or module not exist',
                metadata: {},
                statusCode: 404,
             });

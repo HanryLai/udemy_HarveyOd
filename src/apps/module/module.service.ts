@@ -1,14 +1,14 @@
 import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { CreateModuleDto } from './dto/create-module.dto';
-import { UpdateModuleDto } from './dto/update-module.dto';
-import { ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CourseEntity, CourseModuleEntity } from 'src/entities/courses';
-import { CourseModuleRepository } from 'src/repositories/courses';
-import { EntityManager } from 'typeorm';
-import { CourseService } from '../course/course.service';
+import { ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { CourseType } from 'src/constants';
 import { AccountEntity } from 'src/entities/accounts';
+import { CourseModuleEntity } from 'src/entities/courses';
+import { CourseModuleRepository } from 'src/repositories/courses';
+import { EntityManager, Not } from 'typeorm';
+import { CourseService } from '../course/course.service';
+import { CreateModuleDto } from './dto/create-module.dto';
+import { UpdateModuleDto } from './dto/update-module.dto';
 
 @Injectable()
 export class ModuleService {
@@ -109,21 +109,28 @@ export class ModuleService {
          const course = await this.courseService.findOwnerCourseById(idCourse, token);
          if (course instanceof ErrorResponse) return course;
 
-         // find list module of course
-         const listModuleOfCourseResponse = await this.courseService.findOwnerModulesOfCourse(
-            idCourse,
-            token,
-         );
+         const moduleDuplicateTitle = await this.moduleRepository.findOne({
+            where: {
+               title: createModuleDto.title,
+               course: { id: idCourse },
+            },
+         });
 
-         const isValid = this.isValidCreateModule(
-            createModuleDto.title,
-            listModuleOfCourseResponse,
-            createModuleDto.orderIndex,
-         );
-         console.log(isValid, 'isValid');
-         if (isValid instanceof ErrorResponse) return isValid;
+         const length = await this.moduleRepository.count({
+            where: { course: { id: idCourse } },
+         });
+
+         if (moduleDuplicateTitle) {
+            return new ErrorResponse({
+               message: 'This title is already exist',
+               statusCode: HttpStatus.BAD_REQUEST,
+            });
+         }
          // create new module
-         const newModule = new CourseModuleEntity(createModuleDto);
+         const newModule = new CourseModuleEntity({
+            ...createModuleDto,
+            orderIndex: length,
+         });
          newModule.course = course.metadata;
          const result = await this.entityManager.save(newModule);
          return new OK({
@@ -147,14 +154,23 @@ export class ModuleService {
       try {
          // find module and check permission
          const moduleCourse = await this.findOwnerModuleById(idModule, token);
-         console.log('module', moduleCourse);
+
          if (moduleCourse instanceof ErrorResponse) return moduleCourse;
+         //check duplicate title
+         const moduleDuplicateTitle = await this.moduleRepository.findOne({
+            where: [{ title: UpdateModuleDto.title, id: Not(idModule) }],
+            select: ['id'],
+         });
+         if (moduleDuplicateTitle) {
+            return new ErrorResponse({
+               message: 'This title is already exist',
+               statusCode: HttpStatus.BAD_REQUEST,
+            });
+         }
 
          let { course, ...module } = moduleCourse.metadata;
-         console.log('module', module);
          // update module
          module = { ...module, ...UpdateModuleDto };
-         console.log('module', module);
 
          const result = await this.moduleRepository.save(module);
          return new OK({
@@ -169,54 +185,89 @@ export class ModuleService {
       }
    }
 
-   public isValidCreateModule(
-      title: string,
-      courseResponse: MessageResponse,
-      orderIndex: number,
-   ): boolean | MessageResponse {
+   public async updateModuleOrderIndex(
+      moduleId: string,
+      newOrderIndex: number,
+      token: string,
+   ): Promise<MessageResponse> {
       try {
-         const course = courseResponse.metadata as CourseEntity;
-         const isValid =
-            courseResponse.statusCode === 200 || courseResponse.message == 'Not exist any module';
-         if (!isValid) return courseResponse;
+         // find module and check permission
+         const foundModule = await this.findOwnerModuleById(moduleId, token);
+         if (foundModule instanceof ErrorResponse) return foundModule;
 
-         if (!course.modules) return true;
-         const module = course.modules.find((module) => module.title === title);
-         const isDuplicateOrderIndex = this.isDuplicateOrderIndex(orderIndex, course.modules);
-         console.log(isDuplicateOrderIndex);
-         console.log('module', module);
-         if (module) {
-            console.log('moduleeeee', module);
+         const found: CourseModuleEntity = foundModule.metadata;
+         const currentIndex = found.orderIndex;
+         //check valid order
+         if (newOrderIndex < 0) {
             return new ErrorResponse({
-               message: 'This title is already exist',
+               message: 'Order index must be greater than or equal to 0',
                statusCode: HttpStatus.BAD_REQUEST,
             });
          }
-         if (isDuplicateOrderIndex)
+
+         // Check same module
+         if (found.orderIndex === newOrderIndex)
             return new ErrorResponse({
-               message: 'This order index is already exist',
+               message: 'This module still is this order',
                statusCode: HttpStatus.BAD_REQUEST,
             });
-         return true;
-      } catch (error) {
-         console.log('error', error);
-         throw new HttpExceptionFilter({
-            message: 'Error check duplicate title for module',
-            error: error,
+         // check valid order
+         const length = await this.moduleRepository.count({
+            where: { course: { id: found.course.id } },
          });
-      }
-   }
+         if (newOrderIndex >= length) {
+            return new ErrorResponse({
+               message: 'Order index must be less than ' + length,
+               statusCode: HttpStatus.BAD_REQUEST,
+            });
+         }
+         // transaction save order index
+         const result = await this.entityManager.transaction(async (transactionManager) => {
+            const courseId = foundModule.metadata.course.id;
 
-   public isDuplicateOrderIndex(
-      orderIndex: number,
-      listModuleOfCourse: CourseModuleEntity[],
-   ): boolean | MessageResponse {
-      try {
-         const module = listModuleOfCourse.find((module) => module.orderIndex === orderIndex);
-         return module ? true : false;
+            // push down modules have order index between new order index  and current index
+            if (newOrderIndex < currentIndex) {
+               await transactionManager
+                  .createQueryBuilder()
+                  .update(CourseModuleEntity)
+                  .set({ orderIndex: () => '"module_index" + 1' })
+                  .where('"module_index" >= :newOrderIndex AND "module_index" < :currentIndex', {
+                     newOrderIndex,
+                     currentIndex,
+                  })
+                  .andWhere('courseId = :courseId', { courseId })
+                  .execute();
+            }
+
+            if (newOrderIndex > currentIndex) {
+               await transactionManager
+                  .createQueryBuilder()
+                  .update(CourseModuleEntity)
+                  .set({ orderIndex: () => '"module_index" - 1' })
+                  .where('"module_index" <= :newOrderIndex AND "module_index" > :currentIndex', {
+                     newOrderIndex,
+                     currentIndex,
+                  })
+                  .andWhere('courseId = :courseId', { courseId })
+                  .execute();
+            }
+
+            // Update order index of module
+            return await transactionManager
+               .createQueryBuilder()
+               .update(CourseModuleEntity)
+               .set({ orderIndex: newOrderIndex })
+               .where('id = :moduleId', { moduleId })
+               .execute();
+         });
+         if (result instanceof ErrorResponse) return result;
+         return new OK({
+            message: 'Update order index of module successfully',
+            metadata: result,
+         });
       } catch (error) {
          throw new HttpExceptionFilter({
-            message: 'Error check duplicate order index for module',
+            message: 'Error update order index of module',
             error: error,
          });
       }

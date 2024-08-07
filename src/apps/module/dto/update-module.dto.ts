@@ -16,9 +16,4 @@ export class UpdateModuleDto extends PartialType(CreateModuleDto) {
    @IsNumber()
    @IsNotEmpty()
    orderIndex: number;
-
-   @ApiProperty()
-   @IsNotEmpty()
-   @IsBoolean()
-   isPublished: boolean;
 }

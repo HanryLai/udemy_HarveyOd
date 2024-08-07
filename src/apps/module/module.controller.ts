@@ -3,6 +3,7 @@ import {
    Controller,
    Get,
    Param,
+   Patch,
    Post,
    Put,
    UseGuards,
@@ -66,5 +67,20 @@ export class ModuleController {
       @TokenCurrent() token: string,
    ): Promise<MessageResponse> {
       return this.moduleService.updateModule(updateModuleDto, id_Module, token);
+   }
+
+   //updateModuleOrderIndex
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
+   @Patch('update/order-index/:id_module')
+   @ApiOperation({ summary: 'Update module order index' })
+   @ApiOkResponse({ description: 'Update module order index successfully' })
+   @ApiBody({ type: UpdateModuleDto, description: 'Describe schema update module order index' })
+   public async updateModuleOrderIndex(
+      @Body() body: { orderIndex: number },
+      @Param('id_module') id_Module: string,
+      @TokenCurrent() token: string,
+   ): Promise<MessageResponse> {
+      return this.moduleService.updateModuleOrderIndex(id_Module, body.orderIndex, token);
    }
 }
