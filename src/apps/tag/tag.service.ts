@@ -48,6 +48,36 @@ export class TagService {
       }
    }
 
+   public async SearchName(name: string): Promise<MessageResponse> {
+      try {
+         if (!name.trim())
+            return new ErrorResponse({
+               message: 'Name not valid',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+         const foundTag = await this.tagRepo.findOne({
+            select: ['id', 'name', 'description'],
+            where: {
+               name,
+            },
+         });
+         if (!foundTag)
+            return new ErrorResponse({
+               message: 'Cannot found this category',
+               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+            });
+         return new OK({
+            message: 'Found tag',
+            metadata: foundTag,
+         });
+      } catch (error) {
+         console.log(error);
+         throw new HttpExceptionFilter({ message: 'Error find tag by name', error: error });
+      }
+   }
+
    public async findAll(offset: number): Promise<MessageResponse> {
       try {
          if (offset < 1 || !offset) offset = 1;

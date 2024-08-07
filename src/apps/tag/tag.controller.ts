@@ -10,13 +10,25 @@ export class TagController {
    constructor(private readonly tagService: TagService) {}
 
    @Get('tag/:id')
-   @ApiOperation({ summary: 'Find tag by id category' })
+   @ApiOperation({ summary: 'Find tag by id tag' })
    @ApiFoundResponse({
       description: 'Find tag by id tag successfully',
    })
    @ApiBody({ type: CreateTagDto, description: 'About schema tag' })
    public async findById(@Param('id') id: string): Promise<MessageResponse> {
       return await this.tagService.findById(id);
+   }
+
+   @Get('search')
+   @ApiOperation({ summary: 'Find tag by name tag' })
+   @ApiFoundResponse({
+      description: 'Find tag by name tag successfully',
+   })
+   @ApiBody({ type: CreateTagDto, description: 'About schema tag' })
+   public async findByName(@Query('name') name: string): Promise<MessageResponse> {
+      console.log('name');
+      console.log(name);
+      return await this.tagService.SearchName(name);
    }
 
    @Get('')
