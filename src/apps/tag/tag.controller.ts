@@ -19,7 +19,7 @@ export class TagController {
       return await this.tagService.findById(id);
    }
 
-   @Get('search')
+   @Get('search-name')
    @ApiOperation({ summary: 'Find tag by name tag' })
    @ApiFoundResponse({
       description: 'Find tag by name tag successfully',
