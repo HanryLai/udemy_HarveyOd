@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { TagEntity } from 'src/entities/courses';
 import { TagRepository } from 'src/repositories/courses';
-import { EntityManager } from 'typeorm';
+import { EntityManager, Like } from 'typeorm';
 import { CourseService } from '../course/course.service';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
@@ -59,7 +59,7 @@ export class TagService {
          const foundTag = await this.tagRepo.findOne({
             select: ['id', 'name', 'description'],
             where: {
-               name,
+               name: Like(`%${name}%`),
             },
          });
          if (!foundTag)
