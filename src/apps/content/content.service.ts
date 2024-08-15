@@ -8,6 +8,7 @@ import { CourseService } from '../course/course.service';
 import { EntityManager } from 'typeorm';
 import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { AccountEntity } from 'src/entities/accounts';
+import { CourseType } from 'src/constants';
 
 @Injectable()
 export class ContentService {
@@ -23,7 +24,7 @@ export class ContentService {
             where: {
                id: id,
                course: {
-                  isActive: true,
+                  type: CourseType.PUBLISH,
                },
             },
          });
@@ -80,9 +81,20 @@ export class ContentService {
       }
    }
 
-   public async create(createContentDto: CreateContentDto): Promise<MessageResponse> {
+   public async create(
+      idCourse: string,
+      createContentDto: CreateContentDto,
+      token: string,
+   ): Promise<MessageResponse> {
       try {
-         const entity = this.contentRepo.create(createContentDto);
+         const foundCourse = await this.courseService.findOwnerCourseById(idCourse, token);
+         if (foundCourse instanceof ErrorResponse) return foundCourse;
+         let entityDeclare = new CourseContentEntity({
+            ...createContentDto,
+            course: foundCourse.metadata,
+         });
+
+         const entity = this.contentRepo.create(entityDeclare);
          const created = await this.contentRepo.save(entity);
          console.log(created);
          if (!created)

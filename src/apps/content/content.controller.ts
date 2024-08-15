@@ -35,12 +35,18 @@ export class ContentController {
       return this.contentService.findById(id);
    }
 
-   @Post('create')
+   @UseGuards(ExistToken)
+   @UseInterceptors(RequestInterceptor)
+   @Post('create/:idCourse')
    @ApiOperation({ summary: 'Create new content' })
    @ApiCreatedResponse({ description: 'Created new content' })
    @ApiBody({ type: CreateContentDto, description: 'About information of content' })
-   async create(@Body() createContentDto: CreateContentDto) {
-      return this.contentService.create(createContentDto);
+   async create(
+      @Body() createContentDto: CreateContentDto,
+      @Param('idCourse') idCourse: string,
+      @TokenCurrent() token: string,
+   ) {
+      return this.contentService.create(idCourse, createContentDto, token);
    }
 
    @Patch('content/update/:id')
