@@ -40,6 +40,7 @@ export class ModuleService {
             return new ErrorResponse({
                message: 'Not found any module',
                statusCode: 404,
+               metadata: {},
             });
          }
          return new OK({
@@ -85,6 +86,7 @@ export class ModuleService {
             return new ErrorResponse({
                message: 'Not found any module',
                statusCode: 404,
+               metadata: {},
             });
          }
          return new OK({
@@ -124,6 +126,7 @@ export class ModuleService {
             return new ErrorResponse({
                message: 'This title is already exist',
                statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
             });
          }
          // create new module
@@ -165,6 +168,7 @@ export class ModuleService {
             return new ErrorResponse({
                message: 'This title is already exist',
                statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
             });
          }
 
@@ -202,6 +206,7 @@ export class ModuleService {
             return new ErrorResponse({
                message: 'Order index must be greater than or equal to 0',
                statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
             });
          }
 
@@ -209,7 +214,8 @@ export class ModuleService {
          if (found.orderIndex === newOrderIndex)
             return new ErrorResponse({
                message: 'This module still is this order',
-               statusCode: HttpStatus.BAD_REQUEST,
+               metadata: {},
+               statusCode: HttpStatus.CONFLICT,
             });
          // check valid order
          const length = await this.moduleRepository.count({
@@ -218,6 +224,7 @@ export class ModuleService {
          if (newOrderIndex >= length) {
             return new ErrorResponse({
                message: 'Order index must be less than ' + length,
+               metadata: {},
                statusCode: HttpStatus.BAD_REQUEST,
             });
          }
