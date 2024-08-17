@@ -6,7 +6,7 @@ import { CourseModuleEntity } from 'src/entities/courses';
 import { CourseModule } from '../course/course.module';
 
 @Module({
-   imports: [TypeOrmModule.forFeature([CourseModuleEntity]), forwardRef(() => CourseModule)],
+   imports: [TypeOrmModule.forFeature([CourseModuleEntity]), CourseModule],
    controllers: [ModuleController],
    providers: [ModuleService],
    exports: [ModuleService],
