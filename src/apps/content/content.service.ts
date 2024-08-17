@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { CreateContentDto } from './dto/create-content.dto';
-import { UpdateContentDto } from './dto/update-content.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
+import { CourseType } from 'src/constants';
+import { AccountEntity } from 'src/entities/accounts';
 import { CourseContentEntity } from 'src/entities/courses';
 import { CourseContentRepository } from 'src/repositories/courses';
-import { CourseService } from '../course/course.service';
 import { EntityManager } from 'typeorm';
-import { CREATED, ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
-import { AccountEntity } from 'src/entities/accounts';
-import { CourseType } from 'src/constants';
+import { CourseService } from '../course/course.service';
+import { CreateContentDto } from './dto/create-content.dto';
+import { UpdateContentDto } from './dto/update-content.dto';
 
 @Injectable()
 export class ContentService {
@@ -253,10 +253,10 @@ export class ContentService {
          // transaction save order index
          const result = await this.entityManager.transaction(async (transactionManager) => {
             const courseId = foundContent.metadata.course.id;
-
+            let taskUpdateOrderOtherContent: Promise<any>;
             // push down content have order index between new order index  and current index
             if (newOrderIndex < currentIndex) {
-               await transactionManager
+               taskUpdateOrderOtherContent = transactionManager
                   .createQueryBuilder()
                   .update(CourseContentEntity)
                   .set({ orderIndex: () => '"order_index" + 1' })
@@ -266,10 +266,8 @@ export class ContentService {
                   })
                   .andWhere('courseId = :courseId', { courseId })
                   .execute();
-            }
-
-            if (newOrderIndex > currentIndex) {
-               await transactionManager
+            } else if (newOrderIndex > currentIndex) {
+               taskUpdateOrderOtherContent = transactionManager
                   .createQueryBuilder()
                   .update(CourseContentEntity)
                   .set({ orderIndex: () => '"order_index" - 1' })
@@ -282,17 +280,24 @@ export class ContentService {
             }
 
             // Update order index of content
-            return await transactionManager
+            const taskUpdateOrderThisContent = transactionManager
                .createQueryBuilder()
                .update(CourseContentEntity)
                .set({ orderIndex: newOrderIndex })
                .where('id = :contentId', { contentId })
                .execute();
+
+            return Promise.all([taskUpdateOrderOtherContent, taskUpdateOrderThisContent]);
          });
-         if (result instanceof ErrorResponse) return result;
+         if (result instanceof Error)
+            return new ErrorResponse({
+               message: 'Some thing wrong in transaction update',
+               statusCode: 500,
+               metadata: {},
+            });
          return new OK({
             message: 'Update order index of module successfully',
-            metadata: result,
+            metadata: {},
          });
       } catch (error) {
          throw new HttpExceptionFilter({

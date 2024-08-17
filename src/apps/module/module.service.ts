@@ -1,4 +1,4 @@
-import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorResponse, HttpExceptionFilter, MessageResponse, OK } from 'src/common';
 import { CourseType } from 'src/constants';

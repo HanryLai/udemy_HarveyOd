@@ -1,6 +1,6 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { CreateModuleDto } from './create-module.dto';
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class UpdateModuleDto extends PartialType(CreateModuleDto) {
    @ApiProperty()

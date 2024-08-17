@@ -1,18 +1,15 @@
 import {
-   Controller,
-   Get,
-   Post,
    Body,
-   Patch,
-   Param,
+   Controller,
    Delete,
+   Get,
+   Param,
+   Patch,
+   Post,
+   Put,
    UseGuards,
    UseInterceptors,
-   Put,
 } from '@nestjs/common';
-import { ContentService } from './content.service';
-import { CreateContentDto } from './dto/create-content.dto';
-import { UpdateContentDto } from './dto/update-content.dto';
 import {
    ApiBody,
    ApiCreatedResponse,
@@ -22,7 +19,9 @@ import {
    ApiTags,
 } from '@nestjs/swagger';
 import { ExistToken, RequestInterceptor, TokenCurrent } from 'src/common';
-import { object } from 'joi';
+import { ContentService } from './content.service';
+import { CreateContentDto } from './dto/create-content.dto';
+import { UpdateContentDto } from './dto/update-content.dto';
 
 @ApiTags('contents')
 @Controller('contents')
