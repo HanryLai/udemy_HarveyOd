@@ -16,8 +16,7 @@ export class ModuleService {
       @InjectRepository(CourseModuleEntity) private moduleRepository: CourseModuleRepository,
       private entityManager: EntityManager,
 
-      @Inject(forwardRef(() => CourseService))
-      private courseService: CourseService,
+      @Inject() private courseService: CourseService,
    ) {}
 
    public async findModuleById(id_Module: string): Promise<MessageResponse> {
