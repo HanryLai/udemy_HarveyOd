@@ -91,20 +91,17 @@ export class ContentService {
          const foundCourse = await this.courseService.findOwnerCourseById(idCourse, token);
          if (foundCourse instanceof ErrorResponse) return foundCourse;
 
-         const contentDuplicateOrder = await this.contentRepo.findOne({
+         const quantityContent = await this.contentRepo.count({
             where: {
-               course: { id: idCourse },
-               orderIndex: createContentDto.orderIndex,
+               course: {
+                  id: idCourse,
+               },
             },
          });
-         if (contentDuplicateOrder)
-            return new ErrorResponse({
-               message: 'This order index is existed',
-               metadata: {},
-            });
 
          let entityDeclare = new CourseContentEntity({
             ...createContentDto,
+            orderIndex: quantityContent,
             course: foundCourse.metadata,
          });
          console.log(entityDeclare);

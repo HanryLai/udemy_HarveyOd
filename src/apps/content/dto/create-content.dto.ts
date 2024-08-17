@@ -16,9 +16,4 @@ export class CreateContentDto {
    @IsString()
    @IsNotEmpty()
    contentData: string;
-
-   @ApiProperty()
-   @IsNumber()
-   @IsNotEmpty()
-   orderIndex: number;
 }

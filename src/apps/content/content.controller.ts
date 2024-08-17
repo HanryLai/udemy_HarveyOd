@@ -8,6 +8,7 @@ import {
    Delete,
    UseGuards,
    UseInterceptors,
+   Put,
 } from '@nestjs/common';
 import { ContentService } from './content.service';
 import { CreateContentDto } from './dto/create-content.dto';
@@ -21,6 +22,7 @@ import {
    ApiTags,
 } from '@nestjs/swagger';
 import { ExistToken, RequestInterceptor, TokenCurrent } from 'src/common';
+import { object } from 'joi';
 
 @ApiTags('contents')
 @Controller('contents')
@@ -61,7 +63,7 @@ export class ContentController {
 
    @UseGuards(ExistToken)
    @UseInterceptors(RequestInterceptor)
-   @Patch('content/update/:id')
+   @Put('content/update/:id')
    @ApiOperation({ summary: 'Update content by id' })
    @ApiOkResponse({ description: 'Updated content' })
    @ApiBody({ type: UpdateContentDto, description: 'About information of content' })
@@ -71,6 +73,35 @@ export class ContentController {
       @Body() updateContentDto: UpdateContentDto,
    ) {
       return this.contentService.updateById(id, updateContentDto, token);
+   }
+
+   @UseGuards(ExistToken)
+   @UseInterceptors(RequestInterceptor)
+   @Patch('content/order-index/:id')
+   @ApiOperation({ summary: 'Update order_index of content by id' })
+   @ApiOkResponse({ description: 'Updated order index content' })
+   @ApiBody({
+      schema: {
+         type: 'object',
+         properties: {
+            orderIndex: {
+               type: 'number',
+               example: 2,
+               description: 'New order index of this content',
+            },
+         },
+      },
+      description: 'About information of body api',
+   })
+   async updateOrderIndex(
+      @Param('id') id: string,
+      @TokenCurrent() token: string,
+      @Body()
+      updateContentDto: {
+         orderIndex: number;
+      },
+   ) {
+      return this.contentService.updateContentOrderIndex(id, updateContentDto.orderIndex, token);
    }
 
    @Delete(':id')
