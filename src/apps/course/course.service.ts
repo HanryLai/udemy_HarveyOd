@@ -11,7 +11,6 @@ import { CourseRepository } from 'src/repositories/courses';
 import { EntityManager, In } from 'typeorm';
 import { CategoryService } from '../category/category.service';
 import { CategoryCourseDto } from '../category/dto';
-import { ModuleService } from '../module/module.service';
 import { TagService } from '../tag/tag.service';
 import { UpdateCourseDto } from './dto';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -26,8 +25,6 @@ export class CourseService {
       private categoryService: CategoryService,
       @Inject(forwardRef(() => TagService))
       private tagService: TagService,
-      @Inject(forwardRef(() => TagService))
-      private moduleService: ModuleService,
 
       private entityManager: EntityManager,
       private redisService: RedisService,
@@ -555,6 +552,9 @@ export class CourseService {
                ...updateCourse,
             })
             .where('id = :id', { id: id })
+            .andWhere('instructorId = :instructorId', {
+               instructorId: foundAccount.id,
+            })
             .returning('*')
             .execute();
          if (updateResult.affected == 0)
@@ -623,6 +623,27 @@ export class CourseService {
       } catch (error) {
          throw new HttpExceptionFilter({
             message: 'Check duplicate title course error',
+            error: error,
+         });
+      }
+   }
+
+   /**
+    * Error: Cannot found account
+    */
+   public async checkAccount(token: string): Promise<MessageResponse | AccountEntity> {
+      try {
+         const foundAccount = await this.findAccountByToken(token);
+         return !foundAccount
+            ? new ErrorResponse({
+                 message: 'Cannot found account',
+                 statusCode: HttpStatus.BAD_REQUEST,
+                 metadata: {},
+              })
+            : foundAccount;
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Error check account',
             error: error,
          });
       }
@@ -713,21 +734,88 @@ export class CourseService {
    }
 
    /**
-    * Error: Cannot found account
+    * SERVICE: handle about content of course
     */
-   public async checkAccount(token: string): Promise<MessageResponse | AccountEntity> {
+   public async findContentsOfCourse(idCourse: string): Promise<MessageResponse> {
       try {
-         const foundAccount = await this.findAccountByToken(token);
-         return !foundAccount
-            ? new ErrorResponse({
-                 message: 'Cannot found account',
-                 statusCode: HttpStatus.BAD_REQUEST,
-                 metadata: {},
-              })
-            : foundAccount;
+         const foundCourse = await this.courseRepo
+            .createQueryBuilder('course')
+            .leftJoinAndSelect('course.contents', 'content')
+            .select([
+               'course.id',
+               'content.id',
+               'content.title',
+               'content.orderIndex',
+               'content.contentData',
+            ])
+            .where('course.id = :id', { id: idCourse })
+            .andWhere('course.type = :type', { type: CourseType.PUBLISH })
+            .getOne();
+         if (!foundCourse)
+            return new ErrorResponse({
+               message: 'This course or content not exist',
+               metadata: {},
+               statusCode: 404,
+            });
+         if (foundCourse.contents.length === 0)
+            return new ErrorResponse({
+               message: 'Not exist any content',
+               metadata: {},
+               statusCode: 404,
+            });
+         return new OK({
+            message: 'Found content by course successfully',
+            metadata: foundCourse,
+         });
       } catch (error) {
          throw new HttpExceptionFilter({
-            message: 'Error check account',
+            message: 'Find content by course failed',
+            error: error,
+         });
+      }
+   }
+
+   public async OwnerFindContentsOfCourse(
+      idCourse: string,
+      token: string,
+   ): Promise<MessageResponse> {
+      try {
+         let foundAccount = await this.checkAccount(token);
+         if (foundAccount instanceof ErrorResponse) return foundAccount;
+         foundAccount = foundAccount as AccountEntity;
+         const foundCourse = await this.courseRepo
+            .createQueryBuilder('course')
+            .leftJoinAndSelect('course.contents', 'content')
+            .leftJoinAndSelect('course.instructor', 'instructor')
+            .select([
+               'course.id',
+               'content.id',
+               'content.title',
+               'content.orderIndex',
+               'content.contentData',
+            ])
+            .where('course.id = :idCourse', { idCourse: idCourse })
+            .andWhere('course.instructor.id = :idAccount', { idAccount: foundAccount.id })
+            .getOne();
+         if (!foundCourse)
+            return new ErrorResponse({
+               message: 'This course or content not exist',
+               metadata: {},
+               statusCode: 404,
+            });
+         if (foundCourse.contents.length === 0)
+            return new ErrorResponse({
+               message: 'Not exist any content',
+               metadata: {},
+               statusCode: 404,
+            });
+         return new OK({
+            message: 'Found content by course successfully',
+            metadata: foundCourse,
+         });
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Find content by course failed',
             error: error,
          });
       }

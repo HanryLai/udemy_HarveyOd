@@ -291,4 +291,107 @@ export class CourseController {
    ): Promise<MessageResponse> {
       return await this.courseService.findOwnerModulesOfCourse(id, token);
    }
+
+   /**
+    * CONTROLLER: Api about content of course
+    */
+   //GET
+   @Get('/contents/:course_id')
+   @ApiOperation({ summary: 'Get list contents of course' })
+   @ApiFoundResponse({
+      schema: {
+         type: 'object',
+         properties: {
+            course_id: {
+               type: 'string',
+               example: 'b76591d8-dc2a-48ac-ab41-325ffd6336fe',
+               description: 'Id of course need get list content',
+            },
+            listContents: {
+               type: 'array',
+               items: {
+                  type: 'object',
+                  properties: {
+                     id: {
+                        type: 'string',
+                        example: 'b76591d8-dc2a-48ac-ab41-325ffd6336fe',
+                        description: 'Id of content',
+                     },
+                     title: {
+                        type: 'string',
+                        example: 'Content 1',
+                        description: 'Title of content',
+                     },
+                     description: {
+                        type: 'string',
+                        example: 'Description of content 1',
+                        description: 'Description of content',
+                     },
+                     orderIndex: {
+                        type: 'int',
+                        example: 1,
+                        description: ' order index of content',
+                     },
+                  },
+               },
+            },
+         },
+         description: 'Found list contents',
+      },
+   })
+   public async getContentsOfCourse(@Param('course_id') id: string): Promise<MessageResponse> {
+      return await this.courseService.findContentsOfCourse(id);
+   }
+
+   @UseInterceptors(RequestInterceptor)
+   @UseGuards(ExistToken)
+   @Get('/contents/owner/:course_id')
+   @ApiOperation({ summary: 'For Owner get list contents of course' })
+   @ApiFoundResponse({
+      schema: {
+         type: 'object',
+         properties: {
+            course_id: {
+               type: 'string',
+               example: 'b76591d8-dc2a-48ac-ab41-325ffd6336fe',
+               description: 'Id of course need get list content',
+            },
+            listContents: {
+               type: 'array',
+               items: {
+                  type: 'object',
+                  properties: {
+                     id: {
+                        type: 'string',
+                        example: 'b76591d8-dc2a-48ac-ab41-325ffd6336fe',
+                        description: 'Id of content',
+                     },
+                     title: {
+                        type: 'string',
+                        example: 'Content 1',
+                        description: 'Title of content',
+                     },
+                     description: {
+                        type: 'string',
+                        example: 'Description of content 1',
+                        description: 'Description of content',
+                     },
+                     orderIndex: {
+                        type: 'int',
+                        example: 1,
+                        description: ' order index of content',
+                     },
+                  },
+               },
+            },
+         },
+         description: 'Found list contents',
+      },
+   })
+   public async ownerGetContentsOfCourse(
+      @Param('course_id') id: string,
+      @TokenCurrent() token: string,
+   ): Promise<MessageResponse> {
+      return await this.courseService.OwnerFindContentsOfCourse(id, token);
+   }
 }
