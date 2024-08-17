@@ -37,6 +37,16 @@ export class ContentController {
 
    @UseGuards(ExistToken)
    @UseInterceptors(RequestInterceptor)
+   @Get('content/owner/:id')
+   @ApiOperation({ summary: 'Get content owner by id' })
+   @ApiFoundResponse({ description: 'Found this content owner' })
+   @ApiBody({ type: CreateContentDto, description: 'About information of course' })
+   async findOwnerById(@Param('id') id: string, @TokenCurrent() token: string) {
+      return this.contentService.findOwnerById(id, token);
+   }
+
+   @UseGuards(ExistToken)
+   @UseInterceptors(RequestInterceptor)
    @Post('create/:idCourse')
    @ApiOperation({ summary: 'Create new content' })
    @ApiCreatedResponse({ description: 'Created new content' })
@@ -49,12 +59,18 @@ export class ContentController {
       return this.contentService.create(idCourse, createContentDto, token);
    }
 
+   @UseGuards(ExistToken)
+   @UseInterceptors(RequestInterceptor)
    @Patch('content/update/:id')
    @ApiOperation({ summary: 'Update content by id' })
    @ApiOkResponse({ description: 'Updated content' })
    @ApiBody({ type: UpdateContentDto, description: 'About information of content' })
-   async update(@Param('id') id: string, @Body() updateContentDto: UpdateContentDto) {
-      return this.contentService.updateById(id, updateContentDto);
+   async update(
+      @Param('id') id: string,
+      @TokenCurrent() token: string,
+      @Body() updateContentDto: UpdateContentDto,
+   ) {
+      return this.contentService.updateById(id, updateContentDto, token);
    }
 
    @Delete(':id')

@@ -50,6 +50,7 @@ export class ContentService {
          //check account
          let foundAccount = await this.courseService.checkAccount(token);
          if (foundAccount instanceof ErrorResponse) return foundAccount;
+
          foundAccount = foundAccount as AccountEntity;
          const foundContent = await this.contentRepo.findOne({
             where: {
@@ -89,23 +90,37 @@ export class ContentService {
       try {
          const foundCourse = await this.courseService.findOwnerCourseById(idCourse, token);
          if (foundCourse instanceof ErrorResponse) return foundCourse;
+
+         const contentDuplicateOrder = await this.contentRepo.findOne({
+            where: {
+               course: { id: idCourse },
+               orderIndex: createContentDto.orderIndex,
+            },
+         });
+         if (contentDuplicateOrder)
+            return new ErrorResponse({
+               message: 'This order index is existed',
+               metadata: {},
+            });
+
          let entityDeclare = new CourseContentEntity({
             ...createContentDto,
             course: foundCourse.metadata,
          });
+         console.log(entityDeclare);
 
          const entity = this.contentRepo.create(entityDeclare);
          const created = await this.contentRepo.save(entity);
-         console.log(created);
          if (!created)
             return new ErrorResponse({
                message: 'Cannot create this content',
                metadata: {},
                statusCode: 500,
             });
+         const { course, ...resultReturn } = created;
          return new CREATED({
             message: 'Create new content of course successfully',
-            metadata: created,
+            metadata: resultReturn,
          });
       } catch (error) {
          throw new HttpExceptionFilter({
@@ -118,27 +133,39 @@ export class ContentService {
    public async updateById(
       id: string,
       updateContentDto: UpdateContentDto,
+      token: string,
    ): Promise<MessageResponse> {
       try {
-         const updateContent = await this.entityManager
-            .createQueryBuilder()
-            .update()
-            .set({
-               ...updateContentDto,
-            })
-            .where(id)
-            .execute();
-         if (updateContent.affected == 0)
+         let account = await this.courseService.checkAccount(token);
+         if (account instanceof ErrorResponse) return account;
+         account = account as AccountEntity;
+
+         const foundContent = await this.contentRepo.findOne({
+            where: {
+               id: id,
+               course: {
+                  instructor: {
+                     id: account.id,
+                  },
+               },
+            },
+         });
+         if (!foundContent)
             return new ErrorResponse({
-               message: 'Not any content updated',
+               message: 'Not found content',
                metadata: {},
                statusCode: 404,
             });
+         const updateContent = { ...foundContent, ...updateContentDto };
+         console.log(updateContent);
+         const updateResult = await this.contentRepo.save(updateContent);
+
          return new OK({
             message: 'Update content successfully',
-            metadata: updateContent,
+            metadata: updateResult,
          });
       } catch (error) {
+         console.log(error);
          throw new HttpExceptionFilter({
             message: 'Update content of course error',
             error: error,
