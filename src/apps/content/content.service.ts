@@ -172,13 +172,41 @@ export class ContentService {
 
    public async deleteContent(id: string): Promise<MessageResponse> {
       try {
-         const deleted = await this.contentRepo.delete(id);
-         console.log(deleted);
+         console.log(id);
+         const foundContent = await this.contentRepo.findOne({ where: { id } });
+         if (!foundContent)
+            return new ErrorResponse({
+               message: 'Cannot found this content',
+               statusCode: 404,
+               metadata: {},
+            });
+         const result = await this.entityManager.transaction(async (entityManager) => {
+            const taskDelete = entityManager
+               .createQueryBuilder()
+               .delete()
+               .from(CourseContentEntity, 'content')
+               .where('id = :id', { id: id })
+               .execute();
+
+            const taskUpdateOrderIndex = entityManager
+               .createQueryBuilder()
+               .update(CourseContentEntity)
+               .set({
+                  orderIndex: () => {
+                     return '"order_index" - 1';
+                  },
+               })
+               .where('"order_index" > :index', { index: foundContent.orderIndex })
+               .execute();
+            return Promise.all([taskDelete, taskUpdateOrderIndex]);
+         });
+         console.log(result);
          return new OK({
             message: 'Delete content of course successfully',
             metadata: {},
          });
       } catch (error) {
+         console.log(error);
          throw new HttpExceptionFilter({
             message: 'Delete content of course error',
             error: error,
