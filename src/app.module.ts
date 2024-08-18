@@ -13,6 +13,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggersModule } from './loggers/loggers.module';
 import { BullModule } from '@nestjs/bull';
 import { ContentModule } from './apps/content/content.module';
+import { LessonModule } from './apps/lesson/lesson.module';
 
 @Module({
    imports: [
@@ -53,6 +54,7 @@ import { ContentModule } from './apps/content/content.module';
       ModuleModule,
       LoggersModule,
       ContentModule,
+      LessonModule,
    ],
    controllers: [],
    providers: [
