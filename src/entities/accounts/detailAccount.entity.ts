@@ -8,7 +8,7 @@ export class DetailAccountEntity extends BaseEntity<DetailAccountEntity> impleme
    @Column({ type: 'varchar', name: 'full_name' })
    fullName: string;
 
-   @CreateDateColumn({ name: 'birth_date' })
+   @CreateDateColumn({ name: 'birth_date', type: 'date' })
    birthDate: Date;
 
    @Column({ type: 'enum', enum: EGender, default: EGender.other })
