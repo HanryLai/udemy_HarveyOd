@@ -7,6 +7,7 @@ import { CategoryModule } from '../category/category.module';
 import { TagModule } from '../tag/tag.module';
 import { CourseController } from './course.controller';
 import { CourseService } from './course.service';
+import { CourseRepository } from 'src/repositories/courses';
 
 @Module({
    imports: [
@@ -15,7 +16,7 @@ import { CourseService } from './course.service';
       forwardRef(() => TagModule),
    ],
    controllers: [CourseController],
-   providers: [CourseService, RedisService],
+   providers: [CourseService, RedisService, CourseRepository],
    exports: [CourseService],
 })
 export class CourseModule {}

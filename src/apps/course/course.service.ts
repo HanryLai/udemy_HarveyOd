@@ -18,7 +18,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 @Injectable()
 export class CourseService {
    constructor(
-      @InjectRepository(CourseEntity) private courseRepo: CourseRepository,
+      @InjectRepository(CourseRepository) private courseRepo: CourseRepository,
       @InjectRepository(KeyTokenEntity) private keyTokenRepo: KeyTokenRepository,
 
       @Inject(forwardRef(() => CategoryService))
@@ -38,40 +38,22 @@ export class CourseService {
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
-         //check on redis
+         //read on redis
          const foundRedis = await this.redisService.get<CourseEntity>('course:' + id);
          if (foundRedis && foundRedis.type === CourseType.PUBLISH)
             return new OK({
                message: 'Found course redis',
                metadata: foundRedis,
             });
-         const queryType = [CourseType.PUBLISH, CourseType.UPCOMING];
-         //find on database
-         const foundCourse = await this.courseRepo.findOne({
-            where: {
-               id: id,
-               type: In(queryType),
-            },
-            select: [
-               'id',
-               'title',
-               'description',
-               'language',
-               'price',
-               'discount',
-               'instructor',
-               'level',
-               'thunbnailUrl',
-               'type',
-            ],
-         });
+         // check on database
+         const foundCourse = await this.courseRepo.findCourseByIdRepo(id);
          if (!foundCourse)
             return new ErrorResponse({
                message: 'this course not exist',
                statusCode: HttpStatus.BAD_REQUEST,
                metadata: {},
             });
-
+         // write on redis
          if (foundCourse.type === CourseType.PUBLISH)
             await this.redisService.set('course:' + foundCourse.id, { ...foundCourse }, 60 * 30);
 
@@ -80,6 +62,8 @@ export class CourseService {
             metadata: foundCourse,
          });
       } catch (error) {
+         console.log(error);
+
          throw new HttpExceptionFilter({
             message: 'find course failed',
             error: error,
@@ -103,6 +87,7 @@ export class CourseService {
             });
          //check on redis
          const foundRedis = await this.redisService.get<CourseEntity>('course:' + id);
+         console.log(foundRedis);
          if (foundRedis && foundRedis.instructor.id === owner.id)
             return new OK({
                message: 'Found course redis',
@@ -527,6 +512,7 @@ export class CourseService {
             metadata: result,
          });
       } catch (error) {
+         console.log(error);
          throw new HttpExceptionFilter({
             message: 'Error update status course',
             error: error,

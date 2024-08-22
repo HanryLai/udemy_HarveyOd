@@ -278,4 +278,45 @@ export class ModuleService {
          });
       }
    }
+
+   /**
+    * FOR LESSON
+    */
+   public async findAllLessonsOfModule(id_module: string) {
+      try {
+         const listLesson = await this.moduleRepository.findOne({
+            where: {
+               id: id_module,
+               course: {
+                  type: CourseType.PUBLISH || CourseType.UPCOMING,
+               },
+            },
+            relations: ['course', 'lessons'],
+            select: ['id', 'lessons'],
+         });
+         if (!listLesson)
+            return new ErrorResponse({
+               message: 'Cannot found this module',
+               metadata: {},
+               statusCode: 404,
+            });
+
+         if (listLesson.lessons.length == 0)
+            return new ErrorResponse({
+               message: 'Not have any lesson on module',
+               metadata: {},
+               statusCode: 404,
+            });
+
+         return new OK({
+            message: 'Found list lessons on module successfully',
+            metadata: listLesson,
+         });
+      } catch (error) {
+         throw new HttpExceptionFilter({
+            message: 'Get all lessons of module',
+            error: error,
+         });
+      }
+   }
 }

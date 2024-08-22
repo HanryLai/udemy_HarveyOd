@@ -9,11 +9,12 @@ import {
    UseGuards,
    UseInterceptors,
 } from '@nestjs/common';
-import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ExistToken, MessageResponse, RequestInterceptor, TokenCurrent } from 'src/common';
 import { CreateModuleDto } from './dto/create-module.dto';
 import { ModuleService } from './module.service';
 import { UpdateModuleDto } from './dto';
+import { CourseLessonEntity } from 'src/entities/courses';
 
 @ApiTags('modules')
 @Controller('modules')
@@ -82,5 +83,16 @@ export class ModuleController {
       @TokenCurrent() token: string,
    ): Promise<MessageResponse> {
       return this.moduleService.updateModuleOrderIndex(id_Module, body.orderIndex, token);
+   }
+
+   //FOR LESSON
+   @Get('lessons/:id_module')
+   @ApiOperation({ summary: 'Get list lessons of module' })
+   @ApiResponse({ status: '2XX', description: '', type: CourseLessonEntity })
+   @ApiResponse({ status: '4XX', description: 'Not found this module or lessons of module' })
+   public async findAllLessonsOfModule(
+      @Param('id_module') id_module: string,
+   ): Promise<MessageResponse> {
+      return this.moduleService.findAllLessonsOfModule(id_module);
    }
 }

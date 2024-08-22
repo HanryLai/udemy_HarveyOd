@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { CourseLessonEntity } from 'src/entities/courses';
 
 export class CreateLessonDto {
    @IsString()
@@ -12,5 +13,5 @@ export class CreateLessonDto {
    videoUrl?: string;
 
    @IsNumber()
-   duration?: string;
+   duration?: number;
 }

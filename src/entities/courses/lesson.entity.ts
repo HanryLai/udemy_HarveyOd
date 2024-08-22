@@ -17,8 +17,8 @@ export class CourseLessonEntity extends BaseEntity<CourseLessonEntity> implement
    @Column({ type: 'varchar', name: 'lesson_video_url' })
    videoUrl: string;
 
-   @Column({ type: 'varchar', name: 'lesson_duration' })
-   duration: string;
+   @Column({ type: 'int', name: 'lesson_duration' })
+   duration: number;
 
    @Column({ type: 'int', name: 'lesson_order_index' })
    orderIndex: number;
