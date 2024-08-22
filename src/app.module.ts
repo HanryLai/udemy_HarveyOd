@@ -14,6 +14,7 @@ import { LoggersModule } from './loggers/loggers.module';
 import { BullModule } from '@nestjs/bull';
 import { ContentModule } from './apps/content/content.module';
 import { LessonModule } from './apps/lesson/lesson.module';
+import { EnrollmentModule } from './apps/enrollment/enrollment.module';
 
 @Module({
    imports: [
@@ -55,6 +56,7 @@ import { LessonModule } from './apps/lesson/lesson.module';
       LoggersModule,
       ContentModule,
       LessonModule,
+      EnrollmentModule,
    ],
    controllers: [],
    providers: [
